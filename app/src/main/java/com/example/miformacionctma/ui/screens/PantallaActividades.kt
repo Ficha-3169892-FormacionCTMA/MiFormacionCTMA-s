@@ -25,7 +25,8 @@ import com.example.miformacionctma.ui.components.TarjetaActividad
 fun PantallaActividades(
     actividades: List<ActividadFormativa>,
     onActividadClick: (Long) -> Unit,
-    onAddClick: () -> Unit
+    onAddClick: () -> Unit,
+    onDeleteClick: (Long) -> Unit
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -85,7 +86,8 @@ fun PantallaActividades(
                         ) { actividad ->
                             TarjetaActividad(
                                 actividad = actividad,
-                                onClick = { onActividadClick(actividad.id) }
+                                onClick = { onActividadClick(actividad.id) },
+                                onDeleteClick = { onDeleteClick(actividad.id) }
                             )
                         }
                     }
@@ -108,7 +110,8 @@ fun PantallaActividades(
                         ) { actividad ->
                             TarjetaActividad(
                                 actividad = actividad,
-                                onClick = { onActividadClick(actividad.id) }
+                                onClick = { onActividadClick(actividad.id) },
+                                onDeleteClick = { onDeleteClick(actividad.id) }
                             )
                         }
                     }

@@ -53,6 +53,9 @@ class MainActivity : ComponentActivity() {
                             },
                             onAddClick = {
                                 navController.navigate("crear")
+                            },
+                            onDeleteClick = { id ->
+                                actividades.removeAll { it.id == id }
                             }
                         )
                     }
@@ -81,6 +84,17 @@ class MainActivity : ComponentActivity() {
                             actividades = actividades,
                             onBackClick = {
                                 navController.popBackStack()
+                            },
+                            onDeleteClick = { deleteId ->
+                                actividades.removeAll { it.id == deleteId }
+                                navController.popBackStack("lista", inclusive = false)
+                            },
+                            onProgressUpdate = { updateId, newProgress ->
+                                val index = actividades.indexOfFirst { it.id == updateId }
+                                if (index != -1) {
+                                    val actividad = actividades[index]
+                                    actividades[index] = actividad.copy(progreso = newProgress)
+                                }
                             }
                         )
                     }

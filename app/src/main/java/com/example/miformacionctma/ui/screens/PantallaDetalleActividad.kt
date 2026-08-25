@@ -1,6 +1,5 @@
 package com.example.miformacionctma.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -14,12 +13,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.miformacionctma.domain.ActividadFormativa
 
+import androidx.compose.material.icons.filled.Delete
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaDetalleActividad(
     actividadId: Long,
     actividades: List<ActividadFormativa>,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onDeleteClick: (Long) -> Unit,
+    onProgressUpdate: (Long, Int) -> Unit
 ) {
     val actividad = actividades.find { it.id == actividadId }
 
@@ -31,11 +34,23 @@ fun PantallaDetalleActividad(
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Atrás")
                     }
+                },
+                actions = {
+                    if (actividad != null) {
+                        IconButton(onClick = { onDeleteClick(actividad.id) }) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Eliminar",
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
                 }
             )
         }
     ) { padding ->
         if (actividad == null) {
+            // ... same as before
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -81,7 +96,10 @@ fun PantallaDetalleActividad(
                 
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    )
                 ) {
                     Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(
@@ -89,7 +107,7 @@ fun PantallaDetalleActividad(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Progreso del curso",
+                                text = "Actualizar Progreso",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
@@ -100,10 +118,17 @@ fun PantallaDetalleActividad(
                                 color = MaterialTheme.colorScheme.primary
                             )
                         }
-                        LinearProgressIndicator(
-                            progress = { actividad.progreso / 100f },
-                            modifier = Modifier.fillMaxWidth().height(12.dp),
-                            strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
+                        Slider(
+                            value = actividad.progreso.toFloat(),
+                            onValueChange = { onProgressUpdate(actividad.id, it.toInt()) },
+                            valueRange = 0f..100f,
+                            steps = 100,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Text(
+                            text = "Estado actual: ${com.example.miformacionctma.domain.estadoActividad(actividad)}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
@@ -125,6 +150,6 @@ fun DetailItem(label: String, value: String) {
             text = value, 
             style = MaterialTheme.typography.bodyLarge
         )
-        Divider(modifier = Modifier.padding(top = 8.dp), thickness = 0.5.dp, color = Color.LightGray)
+        HorizontalDivider(modifier = Modifier.padding(top = 8.dp), thickness = 0.5.dp, color = Color.LightGray)
     }
 }

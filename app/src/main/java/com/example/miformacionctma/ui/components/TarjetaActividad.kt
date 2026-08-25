@@ -24,10 +24,13 @@ import com.example.miformacionctma.domain.ActividadFormativa
 import com.example.miformacionctma.domain.Prioridad
 import com.example.miformacionctma.domain.estadoActividad
 
+import androidx.compose.material.icons.filled.Delete
+
 @Composable
 fun TarjetaActividad(
     actividad: ActividadFormativa,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onDeleteClick: () -> Unit
 ) {
     val estado = estadoActividad(actividad)
     val (colorPrioridad, iconoPrioridad) = when (actividad.prioridad) {
@@ -59,19 +62,30 @@ fun TarjetaActividad(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = actividad.titulo,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.weight(1f)
-                )
-                Icon(
-                    imageVector = iconoPrioridad,
-                    contentDescription = null,
-                    tint = colorPrioridad,
-                    modifier = Modifier.size(24.dp)
-                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = actividad.titulo,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = iconoPrioridad,
+                        contentDescription = null,
+                        tint = colorPrioridad,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    IconButton(onClick = onDeleteClick) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Eliminar",
+                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f)
+                        )
+                    }
+                }
             }
 
             Text(
@@ -147,8 +161,9 @@ private fun TarjetaActividadPreview() {
             progreso = 70,
             fecha = "2026-08-19",
             diasRestantes = 2,
-            prioridad = Prioridad.MEDIA
+                    prioridad = Prioridad.MEDIA
         ),
-        onClick = {}
+        onClick = {},
+        onDeleteClick = {}
     )
 }
