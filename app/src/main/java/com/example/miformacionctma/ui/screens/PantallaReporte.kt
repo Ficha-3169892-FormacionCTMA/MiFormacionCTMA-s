@@ -1,19 +1,12 @@
 package com.example.miformacionctma.ui.screens
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
@@ -39,36 +32,57 @@ fun CrearReporteContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        Text(
+            text = "Crear Nuevo Reporte",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
+        )
+
         OutlinedTextField(
             value = state.titulo,
             onValueChange = onTituloChange,
-            label = { Text("Título del reporte") },
+            label = { Text("Título descriptivo") },
             isError = state.errorTitulo != null,
             supportingText = { state.errorTitulo?.let { Text(it) } },
             modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
             enabled = !state.guardando
         )
         
         Button(
             onClick = onGuardar,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().height(56.dp),
+            shape = RoundedCornerShape(16.dp),
             enabled = !state.guardando
         ) {
             if (state.guardando) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(24.dp),
-                    color = MaterialTheme.colorScheme.onPrimary
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    strokeWidth = 2.dp
                 )
             } else {
-                Text("Guardar")
+                Text("Publicar Reporte", fontWeight = FontWeight.Bold)
             }
         }
         
         state.guardadoId?.let {
-            Text("Guardado con éxito. ID: $it", color = MaterialTheme.colorScheme.primary)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(
+                    "¡Éxito! Reporte ID: $it", 
+                    modifier = Modifier.padding(16.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }
