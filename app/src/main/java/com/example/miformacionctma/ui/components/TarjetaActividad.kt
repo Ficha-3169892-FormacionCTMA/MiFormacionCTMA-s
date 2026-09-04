@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Star
@@ -23,8 +24,6 @@ import androidx.compose.ui.unit.dp
 import com.example.miformacionctma.domain.ActividadFormativa
 import com.example.miformacionctma.domain.Prioridad
 import com.example.miformacionctma.domain.estadoActividad
-
-import androidx.compose.material.icons.filled.Delete
 
 @Composable
 fun TarjetaActividad(
@@ -47,7 +46,7 @@ fun TarjetaActividad(
                 stateDescription = "Estado: $estado"
             }
             .clickable { onClick() },
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
@@ -67,7 +66,8 @@ fun TarjetaActividad(
                         text = actividad.titulo,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1
                     )
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -77,12 +77,13 @@ fun TarjetaActividad(
                         tint = colorPrioridad,
                         modifier = Modifier.size(24.dp)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
                     IconButton(onClick = onDeleteClick) {
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Eliminar",
-                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f)
+                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f),
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }
@@ -92,59 +93,62 @@ fun TarjetaActividad(
                 text = actividad.descripcion ?: "Sin descripción",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2
+                maxLines = 2,
+                minLines = 2
             )
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                InfoTag(
-                    icon = Icons.Default.DateRange,
-                    text = "${actividad.diasRestantes} días",
-                    color = MaterialTheme.colorScheme.secondary
-                )
+                Surface(
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.DateRange, contentDescription = null, modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.secondary)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(text = "${actividad.diasRestantes}d", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary)
+                    }
+                }
                 Text(
                     text = estado,
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
                     color = colorPrioridad
                 )
             }
 
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = "Progreso",
-                        style = MaterialTheme.typography.labelMedium
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
                         text = "${actividad.progreso}%",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
                 LinearProgressIndicator(
                     progress = { actividad.progreso / 100f },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().height(6.dp),
                     color = colorPrioridad,
-                    trackColor = colorPrioridad.copy(alpha = 0.2f),
+                    trackColor = colorPrioridad.copy(alpha = 0.15f),
                     strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
                 )
             }
         }
-    }
-}
-
-@Composable
-fun InfoTag(icon: ImageVector, text: String, color: Color) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(icon, contentDescription = null, modifier = Modifier.size(16.dp), tint = color)
-        Spacer(modifier = Modifier.width(4.dp))
-        Text(text = text, style = MaterialTheme.typography.bodySmall, color = color)
     }
 }
 
@@ -161,7 +165,7 @@ private fun TarjetaActividadPreview() {
             progreso = 70,
             fecha = "2026-08-19",
             diasRestantes = 2,
-                    prioridad = Prioridad.MEDIA
+            prioridad = Prioridad.MEDIA
         ),
         onClick = {},
         onDeleteClick = {}
