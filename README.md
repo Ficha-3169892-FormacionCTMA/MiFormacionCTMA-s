@@ -26,6 +26,7 @@ El proyecto integra los principios de planificación de pruebas y aseguramiento 
     * **UI State Inmutable**: Uso de Data Classes (`FormularioActividadUiState`) para representar el estado de la interfaz.
 * **Patrón de Arquitectura:** Unidirectional Data Flow (UDF).
 * **Validación de Datos:** Reglas de negocio aplicadas a títulos, descripciones, fechas y progreso.
+* **Pruebas Unitarias:** Implementación de JUnit 4 y Kotlinx Coroutines Test para validación de lógica de negocio y ViewModels.
 * **Construcción:** Gradle (KTS) / Version Catalogs (`libs.versions.toml`).
 
 ---
@@ -49,13 +50,21 @@ com.example.miformacionctma/
 │   │   ├── PantallaActividades.kt       # Listado principal con FAB de navegación
 │   │   ├── FormularioActividadUiState.kt# Modelo inmutable del estado del formulario
 │   │   ├── PantallaCrearActividad.kt    # State Holder con lógica de validación y guardado
-│   │   └── PantallaDetalleActividad.kt  # Visualización detallada por ID
+│   │   ├── PantallaDetalleActividad.kt  # Visualización detallada por ID
+│   │   ├── CrearReporteViewModel.kt     # Lógica avanzada con ViewModel y StateFlow
+│   │   └── PantallaReporte.kt           # Nueva pantalla de reportes (stateless content + route)
 │   │
 │   └── theme/
 │       ├── Color.kt, Theme.kt, Type.kt  # Configuración de Material Design 3
 │
 ├── DatosEjemplo.kt                # Fuente de datos iniciales persistente en sesión
 └── MainActivity.kt                # Orquestador de navegación (NavHost) y Estado Global
+
+[Test Root]
+├── domain/
+│   └── ReglasActividadTest.kt      # Pruebas unitarias para validación de actividades
+└── ui/screens/
+    └── CrearReporteViewModelTest.kt# Pruebas unitarias para el ViewModel de reportes
 ```
 
 ---
@@ -67,6 +76,7 @@ com.example.miformacionctma/
 3.  **Persistencia del Borrador**: Los datos del formulario se mantienen al rotar la pantalla gracias a `rememberSaveable`.
 4.  **Protección de Datos**: Prevención de duplicados mediante control de estado en el botón de guardado.
 5.  **Arquitectura Limpia**: Implementación de State Hoisting y separación de responsabilidades.
+6.  **Calidad Asegurada**: Cobertura de pruebas unitarias para las reglas de negocio críticas y el flujo de estado de los componentes.
 
 ## 📚 Evidencias del proyecto
 
