@@ -31,28 +31,32 @@ class CrearReporteViewModelTest {
         Dispatchers.resetMain()
     }
 
+    // --- PRUEBAS HU-2: MEJORAR VALIDACIÓN DEL FORMULARIO ---
+
     @Test
-    fun `HU-1 CP-04 - Validación del formulario - Actualización reactiva del título`() {
+    fun `HU-2 CP-12 - Corrección de errores - Actualización reactiva del título`() {
         viewModel.actualizarTitulo("Nuevo Reporte")
         assertEquals("Nuevo Reporte", viewModel.uiState.value.titulo)
         assertNull(viewModel.uiState.value.errorTitulo)
     }
 
     @Test
-    fun `HU-1 CP-07 - Contenido extenso - Límite de 80 caracteres en título`() {
+    fun `HU-2 CP-04 - Título con longitud superior al máximo - Límite de 80 caracteres`() {
         val tituloLargo = "a".repeat(81)
         viewModel.actualizarTitulo(tituloLargo)
         assertNotEquals(tituloLargo, viewModel.uiState.value.titulo)
     }
 
     @Test
-    fun `HU-1 CP-04 - Validación del formulario - Fallo al guardar título corto`() {
+    fun `HU-2 CP-02 - Título con longitud inferior al mínimo - Fallo al guardar título corto`() {
         viewModel.actualizarTitulo("abc")
         viewModel.guardar()
         
         assertNotNull(viewModel.uiState.value.errorTitulo)
         assertEquals(0, repository.reportesList.size)
     }
+
+    // --- PRUEBAS HU-1: MEJORAR DISEÑO VISUAL DE LAS PANTALLAS ---
 
     @Test
     fun `HU-1 CP-03 - Creación de actividad - Guardado exitoso de reporte`() {
