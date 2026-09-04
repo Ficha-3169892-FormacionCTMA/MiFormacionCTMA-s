@@ -21,10 +21,9 @@ Implementar estado, formularios, validación y navegación en la aplicación.
 - Lista -> FAB -> Crear -> Guardar -> Lista
 - Lista -> Tarjeta -> Detalle -> Atrás -> Lista
 
-## Pruebas Realizadas
-- Validación de título corto, largo y vacío.
-- Validación de progreso fuera de rango.
-- Validación de fecha anterior a hoy.
-- Verificación de persistencia del formulario al girar la pantalla (recreación).
-- Verificación del flujo de navegación y backstack.
-- Manejo de ID inexistente en la pantalla de detalle.
+## Pruebas Realizadas (HU-04)
+- **CP-01**: Conservación de datos por rotación de pantalla (Automatizado en `ConservacionEstadoFormularioTest`).
+- **CP-03**: Persistencia de mensajes de validación y errores tras recreación (Automatizado).
+- **CP-04**: Prevención de duplicación al guardar tras recreación (Automatizado).
+- **CP-05**: Retención de tipos de datos complejos y selecciones (Automatizado).
+- **Unitarias**: Validación de títulos, fechas y progreso en `ReglasActividadTest`.

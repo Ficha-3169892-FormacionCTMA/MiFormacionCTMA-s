@@ -11,6 +11,7 @@ En este archivo se registran los documentos y recursos adicionales relacionados 
 
 - [📄 Entrega Semana 2 - Pruebas y Planificación](docs/evidences/Entrega_Semana_2_Pruebas_y_Planificacion.docx)
 
-### Semana 3
+### Semana 4
 
-- [📄 Entrega Semana 3 - Casos, Ejecución y Defectos](docs/evidences/Entrega_Semana_3_Casos_Ejecucion_y_Defectos.docx)
+- [📄 HU-04: Garantizar conservación del estado del formulario](docs/evidences/HU_04_Estado_Formulario.docx)
+- [✅ Casos de Prueba CP-01 a CP-05 (Ver README.md)](README.md#pruebas-realizadas-hu-04)
