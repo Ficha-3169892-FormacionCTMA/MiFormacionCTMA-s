@@ -9,7 +9,7 @@
 
 ## 📋 Descripción del Proyecto
 
-**Mi Formación CTMA** es una aplicación móvil desarrollada en **Kotlin** con **Jetpack Compose** orientada a la gestión, registro, seguimiento y validación de actividades formativas. 
+**Mi Formación CTMA** es  una aplicación móvil desarrollada en **Kotlin** con **Jetpack Compose** orientada a la gestión, registro, seguimiento y validación de actividades formativas. 
 
 El proyecto integra los principios de planificación de pruebas y aseguramiento de calidad del caso **EntregaSegura** (Semanas 2 y 3) junto con la arquitectura móvil multipantalla implementada en **Jetpack Compose** (Semana 4). La aplicación permite la creación de actividades, validación rigurosa de formularios, consulta de detalles técnicos, navegación fluida entre pantallas y un manejo eficiente del estado inmutable.
 
