@@ -17,7 +17,9 @@ fun validarActividad(actividad: ActividadFormativa): List<String> {
         errores.add("El título no debe superar los 80 caracteres.")
     }
 
-    if (actividad.descripcion != null && actividad.descripcion.length > 240) {
+    if (actividad.descripcion.isNullOrBlank()) {
+        errores.add("La descripción es obligatoria.")
+    } else if (actividad.descripcion.length > 240) {
         errores.add("La descripción no debe superar los 240 caracteres.")
     }
 
