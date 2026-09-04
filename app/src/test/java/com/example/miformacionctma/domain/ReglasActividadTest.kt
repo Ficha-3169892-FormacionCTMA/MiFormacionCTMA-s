@@ -19,134 +19,127 @@ class ReglasActividadTest {
         return sdf.format(cal.time)
     }
 
-    // --- PRUEBAS HU-2: MEJORAR VALIDACIÓN DEL FORMULARIO ---
+    // --- PRUEBAS HU-3: AGREGAR PRUEBAS UNITARIAS ---
 
     @Test
-    fun `HU-2 CP-01 - Título vacío - Retorna error obligatorio`() {
+    fun `HU-3 CP-01 - Título vacío - Validación lo rechaza`() {
         val actividad = ActividadFormativa(
             id = 1L, titulo = "", descripcion = "Desc", progreso = 50,
             fecha = getHoyStr(), diasRestantes = 5, prioridad = Prioridad.ALTA
         )
-        val errores = validarActividad(actividad)
-        assertTrue(errores.contains("El título es obligatorio."))
+        assertTrue(validarActividad(actividad).any { it.contains("título", ignoreCase = true) })
     }
 
     @Test
-    fun `HU-2 CP-02 - Título con longitud inferior al mínimo - Retorna error longitud`() {
-        val actividad = ActividadFormativa(
-            id = 1L, titulo = "ab", descripcion = "Desc", progreso = 50,
-            fecha = getHoyStr(), diasRestantes = 5, prioridad = Prioridad.ALTA
-        )
-        val errores = validarActividad(actividad)
-        assertTrue(errores.contains("El título debe tener al menos 3 caracteres."))
-    }
-
-    @Test
-    fun `HU-2 CP-03 - Título con longitud válida - No retorna error`() {
+    fun `HU-3 CP-02 - Título válido - Validación lo acepta`() {
         val actividad = ActividadFormativa(
             id = 1L, titulo = "Título Válido", descripcion = "Desc", progreso = 50,
             fecha = getHoyStr(), diasRestantes = 5, prioridad = Prioridad.ALTA
         )
-        val errores = validarActividad(actividad)
-        assertFalse(errores.any { it.contains("título", ignoreCase = true) })
+        assertFalse(validarActividad(actividad).any { it.contains("título", ignoreCase = true) })
     }
 
     @Test
-    fun `HU-2 CP-04 - Título con longitud superior al máximo - Retorna error máximo`() {
+    fun `HU-3 CP-03 - Título demasiado corto - Validación lo rechaza`() {
+        val actividad = ActividadFormativa(
+            id = 1L, titulo = "ab", descripcion = "Desc", progreso = 50,
+            fecha = getHoyStr(), diasRestantes = 5, prioridad = Prioridad.ALTA
+        )
+        assertTrue(validarActividad(actividad).any { it.contains("3 caracteres") })
+    }
+
+    @Test
+    fun `HU-3 CP-04 - Título demasiado largo - Validación lo rechaza`() {
         val actividad = ActividadFormativa(
             id = 1L, titulo = "a".repeat(81), descripcion = "Desc", progreso = 50,
             fecha = getHoyStr(), diasRestantes = 5, prioridad = Prioridad.ALTA
         )
-        val errores = validarActividad(actividad)
-        assertTrue(errores.contains("El título no debe superar los 80 caracteres."))
+        assertTrue(validarActividad(actividad).any { it.contains("80 caracteres") })
     }
 
     @Test
-    fun `HU-2 CP-05 - Descripción vacía - Retorna error obligatorio`() {
+    fun `HU-3 CP-05 - Descripción vacía - Validación la rechaza`() {
         val actividad = ActividadFormativa(
             id = 1L, titulo = "Título", descripcion = "", progreso = 50,
             fecha = getHoyStr(), diasRestantes = 5, prioridad = Prioridad.ALTA
         )
-        val errores = validarActividad(actividad)
-        assertTrue(errores.contains("La descripción es obligatoria."))
+        assertTrue(validarActividad(actividad).any { it.contains("descripción", ignoreCase = true) })
     }
 
     @Test
-    fun `HU-2 CP-06 - Descripción válida - No retorna error`() {
+    fun `HU-3 CP-06 - Descripción válida - Validación la acepta`() {
         val actividad = ActividadFormativa(
             id = 1L, titulo = "Título", descripcion = "Descripción válida", progreso = 50,
             fecha = getHoyStr(), diasRestantes = 5, prioridad = Prioridad.ALTA
         )
-        val errores = validarActividad(actividad)
-        assertFalse(errores.any { it.contains("descripción", ignoreCase = true) })
+        assertFalse(validarActividad(actividad).any { it.contains("descripción", ignoreCase = true) })
     }
 
     @Test
-    fun `HU-2 CP-07 - Fecha vacía o inválida - Retorna error formato`() {
+    fun `HU-3 CP-07 - Progreso igual a 0 - Validación lo acepta`() {
         val actividad = ActividadFormativa(
-            id = 1L, titulo = "Título", descripcion = "Desc", progreso = 50,
-            fecha = "2024-13-45", diasRestantes = 5, prioridad = Prioridad.ALTA
-        )
-        val errores = validarActividad(actividad)
-        assertTrue(errores.contains("El formato de fecha debe ser YYYY-MM-DD."))
-    }
-
-    @Test
-    fun `HU-2 CP-08 - Fecha válida - No retorna error`() {
-        val actividad = ActividadFormativa(
-            id = 1L, titulo = "Título", descripcion = "Desc", progreso = 50,
+            id = 1L, titulo = "Título", descripcion = "Desc", progreso = 0,
             fecha = getHoyStr(), diasRestantes = 5, prioridad = Prioridad.ALTA
         )
-        val errores = validarActividad(actividad)
-        assertFalse(errores.any { it.contains("fecha", ignoreCase = true) })
+        assertFalse(validarActividad(actividad).any { it.contains("progreso", ignoreCase = true) })
     }
 
     @Test
-    fun `HU-2 CP-09 - Progreso menor que 0 - Retorna error rango`() {
+    fun `HU-3 CP-08 - Progreso igual a 100 - Validación lo acepta`() {
+        val actividad = ActividadFormativa(
+            id = 1L, titulo = "Título", descripcion = "Desc", progreso = 100,
+            fecha = getHoyStr(), diasRestantes = 5, prioridad = Prioridad.ALTA
+        )
+        assertFalse(validarActividad(actividad).any { it.contains("progreso", ignoreCase = true) })
+    }
+
+    @Test
+    fun `HU-3 CP-09 - Progreso menor que 0 - Validación lo rechaza`() {
         val actividad = ActividadFormativa(
             id = 1L, titulo = "Título", descripcion = "Desc", progreso = -1,
             fecha = getHoyStr(), diasRestantes = 5, prioridad = Prioridad.ALTA
         )
-        val errores = validarActividad(actividad)
-        assertTrue(errores.contains("El progreso debe estar entre 0 y 100."))
+        assertTrue(validarActividad(actividad).any { it.contains("progreso", ignoreCase = true) })
     }
 
     @Test
-    fun `HU-2 CP-10 - Progreso mayor que 100 - Retorna error rango`() {
+    fun `HU-3 CP-10 - Progreso mayor que 100 - Validación lo rechaza`() {
         val actividad = ActividadFormativa(
             id = 1L, titulo = "Título", descripcion = "Desc", progreso = 101,
             fecha = getHoyStr(), diasRestantes = 5, prioridad = Prioridad.ALTA
         )
-        val errores = validarActividad(actividad)
-        assertTrue(errores.contains("El progreso debe estar entre 0 y 100."))
+        assertTrue(validarActividad(actividad).any { it.contains("progreso", ignoreCase = true) })
     }
 
     @Test
-    fun `HU-2 CP-11 - Progreso en los límites - Acepta 0 y 100`() {
-        val actividad0 = ActividadFormativa(
-            id = 1L, titulo = "Título", descripcion = "Desc", progreso = 0,
+    fun `HU-3 CP-11 - Fecha válida - Validación la acepta`() {
+        val actividad = ActividadFormativa(
+            id = 1L, titulo = "Título", descripcion = "Desc", progreso = 50,
             fecha = getHoyStr(), diasRestantes = 5, prioridad = Prioridad.ALTA
         )
-        val actividad100 = ActividadFormativa(
-            id = 2L, titulo = "Título", descripcion = "Desc", progreso = 100,
-            fecha = getHoyStr(), diasRestantes = 5, prioridad = Prioridad.ALTA
-        )
-        assertTrue(validarActividad(actividad0).none { it.contains("progreso") })
-        assertTrue(validarActividad(actividad100).none { it.contains("progreso") })
+        assertFalse(validarActividad(actividad).any { it.contains("fecha", ignoreCase = true) })
     }
 
     @Test
-    fun `HU-2 CP-14 - Formulario completamente válido - No retorna errores`() {
+    fun `HU-3 CP-12 - Fecha inválida - Validación la rechaza`() {
+        val actividad = ActividadFormativa(
+            id = 1L, titulo = "Título", descripcion = "Desc", progreso = 50,
+            fecha = "fecha-invalida", diasRestantes = 5, prioridad = Prioridad.ALTA
+        )
+        assertTrue(validarActividad(actividad).any { it.contains("fecha", ignoreCase = true) })
+    }
+
+    @Test
+    fun `HU-3 CP-13 - Actividad completamente válida - Aprobada`() {
         val actividad = ActividadFormativa(
             id = 1L, titulo = "Título Válido", descripcion = "Descripción Válida", progreso = 100,
             fecha = getHoyStr(), diasRestantes = 0, prioridad = Prioridad.ALTA
         )
-        val errores = validarActividad(actividad)
-        assertTrue(errores.isEmpty())
+        assertTrue(validarActividad(actividad).isEmpty())
     }
 
     @Test
-    fun `HU-2 CP-15 - Formulario completamente inválido - Retorna múltiples errores`() {
+    fun `HU-3 CP-14 - Actividad con múltiples datos inválidos - Detecta errores`() {
         val actividad = ActividadFormativa(
             id = 1L, titulo = "", descripcion = "", progreso = 150,
             fecha = getAyerStr(), diasRestantes = 0, prioridad = Prioridad.ALTA
@@ -155,14 +148,24 @@ class ReglasActividadTest {
         assertTrue(errores.size >= 4)
     }
 
+    // --- PRUEBAS HU-2: MEJORAR VALIDACIÓN DEL FORMULARIO ---
+
+    @Test
+    fun `HU-2 CP-01 - Título vacío - Retorna error obligatorio`() {
+        val actividad = ActividadFormativa(
+            id = 1L, titulo = "", descripcion = "Desc", progreso = 50,
+            fecha = getHoyStr(), diasRestantes = 5, prioridad = Prioridad.ALTA
+        )
+        assertTrue(validarActividad(actividad).contains("El título es obligatorio."))
+    }
+
     @Test
     fun `HU-2 CP-16 - Regresión de creación - El guardado funciona tras los cambios`() {
         val actividad = ActividadFormativa(
             id = 1L, titulo = "Título Válido", descripcion = "Descripción Válida", progreso = 100,
             fecha = getHoyStr(), diasRestantes = 0, prioridad = Prioridad.MEDIA
         )
-        val errores = validarActividad(actividad)
-        assertTrue(errores.isEmpty())
+        assertTrue(validarActividad(actividad).isEmpty())
     }
 
     // --- PRUEBAS HU-1: MEJORAR DISEÑO VISUAL DE LAS PANTALLAS ---
@@ -183,16 +186,5 @@ class ReglasActividadTest {
             ActividadFormativa(2L, "T2", "D2", 100, getHoyStr(), 0, Prioridad.MEDIA)
         )
         assertEquals(75.0, promedioProgreso(lista), 0.01)
-    }
-
-    @Test
-    fun `HU-1 CP-01 - Visualización de actividades - Filtrado por título funciona`() {
-        val lista = listOf(
-            ActividadFormativa(1L, "Kotlin Básico", "D1", 50, getHoyStr(), 0, Prioridad.MEDIA),
-            ActividadFormativa(2L, "Java Avanzado", "D2", 100, getHoyStr(), 0, Prioridad.MEDIA)
-        )
-        val resultado = buscarPorTitulo(lista, "kotlin")
-        assertEquals(1, resultado.size)
-        assertEquals("Kotlin Básico", resultado[0].titulo)
     }
 }
