@@ -20,7 +20,7 @@ class ReglasActividadTest {
     }
 
     @Test
-    fun `CP-01 - Título vacío - Retorna error obligatorio`() {
+    fun `HU-1 CP-01 - Título vacío - Retorna error obligatorio`() {
         val actividad = ActividadFormativa(
             id = 1L, titulo = "", descripcion = "Desc", progreso = 50,
             fecha = getHoyStr(), diasRestantes = 5, prioridad = Prioridad.ALTA
@@ -30,7 +30,7 @@ class ReglasActividadTest {
     }
 
     @Test
-    fun `CP-02 - Título con longitud inferior al mínimo - Retorna error longitud`() {
+    fun `HU-1 CP-02 - Título con longitud inferior al mínimo - Retorna error longitud`() {
         val actividad = ActividadFormativa(
             id = 1L, titulo = "ab", descripcion = "Desc", progreso = 50,
             fecha = getHoyStr(), diasRestantes = 5, prioridad = Prioridad.ALTA
@@ -40,7 +40,7 @@ class ReglasActividadTest {
     }
 
     @Test
-    fun `CP-03 - Título con longitud válida - No retorna error`() {
+    fun `HU-1 CP-03 - Título con longitud válida - No retorna error`() {
         val actividad = ActividadFormativa(
             id = 1L, titulo = "Título Válido", descripcion = "Desc", progreso = 50,
             fecha = getHoyStr(), diasRestantes = 5, prioridad = Prioridad.ALTA
@@ -50,7 +50,7 @@ class ReglasActividadTest {
     }
 
     @Test
-    fun `CP-04 - Título con longitud superior al máximo - Retorna error máximo`() {
+    fun `HU-1 CP-04 - Título con longitud superior al máximo - Retorna error máximo`() {
         val actividad = ActividadFormativa(
             id = 1L, titulo = "a".repeat(81), descripcion = "Desc", progreso = 50,
             fecha = getHoyStr(), diasRestantes = 5, prioridad = Prioridad.ALTA
@@ -60,7 +60,7 @@ class ReglasActividadTest {
     }
 
     @Test
-    fun `CP-05 - Descripción vacía - Retorna error obligatorio`() {
+    fun `HU-1 CP-05 - Descripción vacía - Retorna error obligatorio`() {
         val actividad = ActividadFormativa(
             id = 1L, titulo = "Título", descripcion = "", progreso = 50,
             fecha = getHoyStr(), diasRestantes = 5, prioridad = Prioridad.ALTA
@@ -70,7 +70,7 @@ class ReglasActividadTest {
     }
 
     @Test
-    fun `CP-06 - Descripción válida - No retorna error`() {
+    fun `HU-1 CP-06 - Descripción válida - No retorna error`() {
         val actividad = ActividadFormativa(
             id = 1L, titulo = "Título", descripcion = "Descripción válida", progreso = 50,
             fecha = getHoyStr(), diasRestantes = 5, prioridad = Prioridad.ALTA
@@ -80,7 +80,7 @@ class ReglasActividadTest {
     }
 
     @Test
-    fun `CP-07 - Fecha vacía o inválida - Retorna error formato`() {
+    fun `HU-1 CP-07 - Fecha vacía o inválida - Retorna error formato`() {
         val actividad = ActividadFormativa(
             id = 1L, titulo = "Título", descripcion = "Desc", progreso = 50,
             fecha = "2024-13-45", diasRestantes = 5, prioridad = Prioridad.ALTA
@@ -90,7 +90,7 @@ class ReglasActividadTest {
     }
 
     @Test
-    fun `CP-08 - Fecha válida - No retorna error`() {
+    fun `HU-1 CP-08 - Fecha válida - No retorna error`() {
         val actividad = ActividadFormativa(
             id = 1L, titulo = "Título", descripcion = "Desc", progreso = 50,
             fecha = getHoyStr(), diasRestantes = 5, prioridad = Prioridad.ALTA
@@ -100,7 +100,7 @@ class ReglasActividadTest {
     }
 
     @Test
-    fun `CP-09 - Progreso menor que 0 - Retorna error rango`() {
+    fun `HU-1 CP-09 - Progreso menor que 0 - Retorna error rango`() {
         val actividad = ActividadFormativa(
             id = 1L, titulo = "Título", descripcion = "Desc", progreso = -1,
             fecha = getHoyStr(), diasRestantes = 5, prioridad = Prioridad.ALTA
@@ -110,7 +110,7 @@ class ReglasActividadTest {
     }
 
     @Test
-    fun `CP-10 - Progreso mayor que 100 - Retorna error rango`() {
+    fun `HU-1 CP-10 - Progreso mayor que 100 - Retorna error rango`() {
         val actividad = ActividadFormativa(
             id = 1L, titulo = "Título", descripcion = "Desc", progreso = 101,
             fecha = getHoyStr(), diasRestantes = 5, prioridad = Prioridad.ALTA
@@ -120,7 +120,7 @@ class ReglasActividadTest {
     }
 
     @Test
-    fun `CP-11 - Progreso en los límites - Acepta 0 y 100`() {
+    fun `HU-1 CP-11 - Progreso en los límites - Acepta 0 y 100`() {
         val actividad0 = ActividadFormativa(
             id = 1L, titulo = "Título", descripcion = "Desc", progreso = 0,
             fecha = getHoyStr(), diasRestantes = 5, prioridad = Prioridad.ALTA
@@ -134,7 +134,7 @@ class ReglasActividadTest {
     }
 
     @Test
-    fun `CP-14 - Formulario completamente válido - No retorna errores`() {
+    fun `HU-1 CP-14 - Formulario completamente válido - No retorna errores`() {
         val actividad = ActividadFormativa(
             id = 1L, titulo = "Título Válido", descripcion = "Descripción Válida", progreso = 100,
             fecha = getHoyStr(), diasRestantes = 0, prioridad = Prioridad.ALTA
@@ -144,7 +144,7 @@ class ReglasActividadTest {
     }
 
     @Test
-    fun `CP-15 - Formulario completamente inválido - Retorna múltiples errores`() {
+    fun `HU-1 CP-15 - Formulario completamente inválido - Retorna múltiples errores`() {
         val actividad = ActividadFormativa(
             id = 1L, titulo = "", descripcion = "", progreso = 150,
             fecha = getAyerStr(), diasRestantes = 0, prioridad = Prioridad.ALTA
@@ -154,7 +154,7 @@ class ReglasActividadTest {
     }
 
     @Test
-    fun `CP-16 - Regresión de creación - Lógica de estados sigue funcionando`() {
+    fun `HU-1 CP-16 - Regresión de creación - Lógica de estados sigue funcionando`() {
         val actividad = ActividadFormativa(
             id = 1L, titulo = "T", descripcion = "D", progreso = 100,
             fecha = getHoyStr(), diasRestantes = 0, prioridad = Prioridad.MEDIA

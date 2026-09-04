@@ -32,21 +32,21 @@ class CrearReporteViewModelTest {
     }
 
     @Test
-    fun `CP-04 - Validación del formulario - Actualización reactiva del título`() {
+    fun `HU-1 CP-04 - Validación del formulario - Actualización reactiva del título`() {
         viewModel.actualizarTitulo("Nuevo Reporte")
         assertEquals("Nuevo Reporte", viewModel.uiState.value.titulo)
         assertNull(viewModel.uiState.value.errorTitulo)
     }
 
     @Test
-    fun `CP-07 - Contenido extenso - Límite de 80 caracteres en título`() {
+    fun `HU-1 CP-07 - Contenido extenso - Límite de 80 caracteres en título`() {
         val tituloLargo = "a".repeat(81)
         viewModel.actualizarTitulo(tituloLargo)
         assertNotEquals(tituloLargo, viewModel.uiState.value.titulo)
     }
 
     @Test
-    fun `CP-04 - Validación del formulario - Fallo al guardar título corto`() {
+    fun `HU-1 CP-04 - Validación del formulario - Fallo al guardar título corto`() {
         viewModel.actualizarTitulo("abc")
         viewModel.guardar()
         
@@ -55,7 +55,7 @@ class CrearReporteViewModelTest {
     }
 
     @Test
-    fun `CP-03 - Creación de actividad - Guardado exitoso de reporte`() {
+    fun `HU-1 CP-03 - Creación de actividad - Guardado exitoso de reporte`() {
         val tituloValido = "Reporte Válido"
         viewModel.actualizarTitulo(tituloValido)
         viewModel.guardar()
