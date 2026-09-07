@@ -30,8 +30,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.miformacionctma.data.database.AppDatabase
-import com.example.miformacionctma.data.repository.ActividadRepository
+import com.example.miformacionctma.data.ActividadDataStore
 import com.example.miformacionctma.ui.viewmodel.ActividadViewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -50,12 +49,12 @@ class MainActivity : ComponentActivity() {
             MiFormacionCTMATheme {
                 val navController = rememberNavController()
                 
-                val db = AppDatabase.getDatabase(LocalContext.current)
-                val repository = ActividadRepository(db.actividadDao())
+                val context = LocalContext.current
+                val dataStore = ActividadDataStore(context)
                 val viewModel: ActividadViewModel = viewModel(
                     factory = object : ViewModelProvider.Factory {
                         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                            return ActividadViewModel(repository) as T
+                            return ActividadViewModel(dataStore) as T
                         }
                     }
                 )
@@ -117,11 +116,9 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-
 fun PantallaInicio(
     modifier: Modifier = Modifier
 ) {
-
     val actividades = listOf(
         ActividadFormativa(
             id = 1,
