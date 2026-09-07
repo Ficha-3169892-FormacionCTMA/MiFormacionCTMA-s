@@ -31,6 +31,14 @@ class CrearReporteViewModelTest {
         Dispatchers.resetMain()
     }
 
+    // --- PRUEBAS HU-4: MEJORAR PERSISTENCIA DEL ESTADO DE LAS ACTIVIDADES ---
+
+    @Test
+    fun `HU-4 CP-11 - Carga de datos - El ViewModel inicializa correctamente`() {
+        assertNotNull(viewModel.uiState.value)
+        assertEquals("", viewModel.uiState.value.titulo)
+    }
+
     // --- PRUEBAS HU-2: MEJORAR VALIDACIÓN DEL FORMULARIO ---
 
     @Test

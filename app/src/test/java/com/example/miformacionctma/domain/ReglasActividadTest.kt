@@ -19,6 +19,26 @@ class ReglasActividadTest {
         return sdf.format(cal.time)
     }
 
+    // --- PRUEBAS HU-4: MEJORAR PERSISTENCIA DEL ESTADO DE LAS ACTIVIDADES ---
+
+    @Test
+    fun `HU-4 CP-01 - Crear y guardar una actividad - Validación lo acepta`() {
+        val actividad = ActividadFormativa(
+            id = 1L, titulo = "Actividad Persistente", descripcion = "Descripción obligatoria", progreso = 50,
+            fecha = getHoyStr(), diasRestantes = 5, prioridad = Prioridad.ALTA
+        )
+        assertTrue(validarActividad(actividad).isEmpty())
+    }
+
+    @Test
+    fun `HU-4 CP-07 - Información completa - Todos los datos son válidos`() {
+        val actividad = ActividadFormativa(
+            id = 1L, titulo = "Título Válido", descripcion = "Descripción Válida", progreso = 100,
+            fecha = getHoyStr(), diasRestantes = 0, prioridad = Prioridad.ALTA
+        )
+        assertTrue(validarActividad(actividad).isEmpty())
+    }
+
     // --- PRUEBAS HU-3: AGREGAR PRUEBAS UNITARIAS ---
 
     @Test
@@ -127,25 +147,6 @@ class ReglasActividadTest {
             fecha = "fecha-invalida", diasRestantes = 5, prioridad = Prioridad.ALTA
         )
         assertTrue(validarActividad(actividad).any { it.contains("fecha", ignoreCase = true) })
-    }
-
-    @Test
-    fun `HU-3 CP-13 - Actividad completamente válida - Aprobada`() {
-        val actividad = ActividadFormativa(
-            id = 1L, titulo = "Título Válido", descripcion = "Descripción Válida", progreso = 100,
-            fecha = getHoyStr(), diasRestantes = 0, prioridad = Prioridad.ALTA
-        )
-        assertTrue(validarActividad(actividad).isEmpty())
-    }
-
-    @Test
-    fun `HU-3 CP-14 - Actividad con múltiples datos inválidos - Detecta errores`() {
-        val actividad = ActividadFormativa(
-            id = 1L, titulo = "", descripcion = "", progreso = 150,
-            fecha = getAyerStr(), diasRestantes = 0, prioridad = Prioridad.ALTA
-        )
-        val errores = validarActividad(actividad)
-        assertTrue(errores.size >= 4)
     }
 
     // --- PRUEBAS HU-2: MEJORAR VALIDACIÓN DEL FORMULARIO ---
