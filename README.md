@@ -21,7 +21,7 @@ Implementar estado, formularios, validación y navegación en la aplicación.
 - Lista -> FAB -> Crear -> Guardar -> Lista
 - Lista -> Tarjeta -> Detalle -> Atrás -> Lista
 
-## Pruebas Realizadas (HU-04)
+## Pruebas Realizadas (HU-16)
 - **CP-01**: Conservación de datos por rotación de pantalla (Automatizado en `ConservacionEstadoFormularioTest`).
 - **CP-03**: Persistencia de mensajes de validación y errores tras recreación (Automatizado).
 - **CP-04**: Prevención de duplicación al guardar tras recreación (Automatizado).

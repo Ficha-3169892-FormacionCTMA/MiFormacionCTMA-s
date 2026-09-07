@@ -13,5 +13,5 @@ En este archivo se registran los documentos y recursos adicionales relacionados 
 
 ### Semana 4
 
-- [📄 HU-04: Garantizar conservación del estado del formulario](docs/evidences/HU_04_Estado_Formulario.docx)
-- [✅ Casos de Prueba CP-01 a CP-05 (Ver README.md)](README.md#pruebas-realizadas-hu-04)
+- [📄 HU-16: Garantizar conservación del estado del formulario](docs/evidences/HU_16_Estado_Formulario.docx)
+- [✅ Casos de Prueba CP-01 a CP-05 (Ver README.md)](README.md#pruebas-realizadas-hu-16)

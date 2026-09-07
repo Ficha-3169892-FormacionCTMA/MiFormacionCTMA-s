@@ -10,7 +10,7 @@ import org.junit.Rule
 import org.junit.Test
 
 /**
- * Pruebas para HU-04: Garantizar conservación del estado del formulario.
+ * Pruebas para HU-16: Garantizar conservación del estado del formulario.
  */
 class ConservacionEstadoFormularioTest {
 
@@ -18,7 +18,7 @@ class ConservacionEstadoFormularioTest {
     val composeTestRule = createComposeRule()
 
     /**
-     * HU-04 | CP-01: Conservación de datos por rotación de pantalla (Simulado mediante StateRestorationTester)
+     * HU-16 | CP-01: Conservación de datos por rotación de pantalla (Simulado mediante StateRestorationTester)
      */
     @Test
     fun testCP01_ConservacionDatosPorRotacion() {
@@ -45,7 +45,7 @@ class ConservacionEstadoFormularioTest {
     }
 
     /**
-     * HU-04 | CP-03: Persistencia de mensajes de validación y errores
+     * HU-16 | CP-03: Persistencia de mensajes de validación y errores
      */
     @Test
     fun testCP03_PersistenciaErroresTrasRecreacion() {
@@ -71,7 +71,7 @@ class ConservacionEstadoFormularioTest {
     }
 
     /**
-     * HU-04 | CP-04: Prevención de duplicación al guardar
+     * HU-16 | CP-04: Prevención de duplicación al guardar
      */
     @Test
     fun testCP04_PrevencionDuplicacionGuardar() {
@@ -102,7 +102,7 @@ class ConservacionEstadoFormularioTest {
     }
 
     /**
-     * HU-04 | CP-05: Retención de selecciones (Prioridad)
+     * HU-16 | CP-05: Retención de selecciones (Prioridad)
      */
     @Test
     fun testCP05_RetencionSeleccionPrioridad() {
