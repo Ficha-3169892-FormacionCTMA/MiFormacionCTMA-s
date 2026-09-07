@@ -13,11 +13,12 @@ import kotlinx.serialization.json.Json
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "actividades_prefs")
 
-class ActividadDataStore(private val context: Context) {
+class ActividadDataStore(private val context: Context) : ActividadDataSource {
 
     private val ACTIVIDADES_KEY = stringPreferencesKey("actividades_list")
+    private val SORT_ORDER_KEY = stringPreferencesKey("sort_order")
 
-    val actividadesFlow: Flow<List<ActividadFormativa>> = context.dataStore.data
+    override val actividadesFlow: Flow<List<ActividadFormativa>> = context.dataStore.data
         .map { preferences ->
             val jsonString = preferences[ACTIVIDADES_KEY]
             if (jsonString != null) {
@@ -31,9 +32,20 @@ class ActividadDataStore(private val context: Context) {
             }
         }
 
-    suspend fun guardarActividades(actividades: List<ActividadFormativa>) {
+    override val sortOrderFlow: Flow<SortOrder> = context.dataStore.data
+        .map { preferences ->
+            SortOrder.valueOf(preferences[SORT_ORDER_KEY] ?: SortOrder.FECHA.name)
+        }
+
+    override suspend fun guardarActividades(actividades: List<ActividadFormativa>) {
         context.dataStore.edit { preferences ->
             preferences[ACTIVIDADES_KEY] = Json.encodeToString(actividades)
+        }
+    }
+
+    override suspend fun updateSortOrder(order: SortOrder) {
+        context.dataStore.edit { preferences ->
+            preferences[SORT_ORDER_KEY] = order.name
         }
     }
 }
