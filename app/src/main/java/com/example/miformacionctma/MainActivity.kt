@@ -24,8 +24,15 @@ import com.example.miformacionctma.domain.Prioridad
 import com.example.miformacionctma.domain.actividadesUrgentes
 import com.example.miformacionctma.domain.promedioProgreso
 import com.example.miformacionctma.ui.screens.PantallaActividades
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.miformacionctma.data.database.AppDatabase
+import com.example.miformacionctma.data.repository.ActividadRepository
+import com.example.miformacionctma.ui.viewmodel.ActividadViewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -42,7 +49,18 @@ class MainActivity : ComponentActivity() {
         setContent {
             MiFormacionCTMATheme {
                 val navController = rememberNavController()
-                val actividades = remember { mutableStateListOf(*actividadesEjemplo.toTypedArray()) }
+                
+                val db = AppDatabase.getDatabase(LocalContext.current)
+                val repository = ActividadRepository(db.actividadDao())
+                val viewModel: ActividadViewModel = viewModel(
+                    factory = object : ViewModelProvider.Factory {
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                            return ActividadViewModel(repository) as T
+                        }
+                    }
+                )
+                
+                val actividades by viewModel.actividades.collectAsStateWithLifecycle()
 
                 NavHost(navController = navController, startDestination = "lista") {
                     composable("lista") {
@@ -55,7 +73,7 @@ class MainActivity : ComponentActivity() {
                                 navController.navigate("crear")
                             },
                             onDeleteClick = { id ->
-                                actividades.removeAll { it.id == id }
+                                viewModel.eliminarActividad(id)
                             }
                         )
                     }
@@ -63,9 +81,7 @@ class MainActivity : ComponentActivity() {
                     composable("crear") {
                         PantallaCrearActividad(
                             onActividadGuardada = { nuevaActividad ->
-                                if (!actividades.any { it.id == nuevaActividad.id }) {
-                                    actividades.add(nuevaActividad)
-                                }
+                                viewModel.agregarActividad(nuevaActividad)
                                 navController.popBackStack("lista", inclusive = false)
                             },
                             onBackClick = {
@@ -86,15 +102,11 @@ class MainActivity : ComponentActivity() {
                                 navController.popBackStack()
                             },
                             onDeleteClick = { deleteId ->
-                                actividades.removeAll { it.id == deleteId }
+                                viewModel.eliminarActividad(deleteId)
                                 navController.popBackStack("lista", inclusive = false)
                             },
                             onProgressUpdate = { updateId, newProgress ->
-                                val index = actividades.indexOfFirst { it.id == updateId }
-                                if (index != -1) {
-                                    val actividad = actividades[index]
-                                    actividades[index] = actividad.copy(progreso = newProgress)
-                                }
+                                viewModel.actualizarProgreso(updateId, newProgress)
                             }
                         )
                     }
