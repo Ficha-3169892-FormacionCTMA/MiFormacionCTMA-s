@@ -74,6 +74,6 @@ com.example.miformacionctma/
 
 - [📄 Entrega Semana 2 - Pruebas y Planificación](docs/evidencias/Entrega_Semana_2_Pruebas_y_Planificacion.docx)
 
-### Semana 3
+### Semana 3 
 
 - [📄 Entrega Semana 3 - Casos, Ejecución y Defectos](docs/evidencias/Entrega_Semana_3_Casos_Ejecucion_y_Defectos.docx)
