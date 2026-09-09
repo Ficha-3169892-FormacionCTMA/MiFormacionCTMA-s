@@ -33,13 +33,14 @@ import com.example.miformacionctma.domain.Prioridad
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaFormularioActividad(
+    actividadInicial: ActividadFormativa? = null, // Nueva opción
     onBack: () -> Unit,
     onGuardar: (ActividadFormativa) -> Unit
 ) {
-    // 1. Estados locales del formulario
-    var titulo by remember { mutableStateOf("") }
-    var descripcion by remember { mutableStateOf("") }
-    var prioridad by remember { mutableStateOf(Prioridad.MEDIA) }
+    // 1. Estados locales inicializados con la actividad si existe
+    var titulo by remember { mutableStateOf(actividadInicial?.titulo ?: "") }
+    var descripcion by remember { mutableStateOf(actividadInicial?.descripcion ?: "") }
+    var prioridad by remember { mutableStateOf(actividadInicial?.prioridad ?: Prioridad.MEDIA) }
 
     // Validación simple
     val esValido = titulo.isNotBlank()
@@ -47,7 +48,7 @@ fun PantallaFormularioActividad(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Nueva Actividad") },
+                title = { Text(if (actividadInicial == null) "Nueva Actividad" else "Editar Actividad") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Regresar")
@@ -61,9 +62,10 @@ fun PantallaFormularioActividad(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(16.dp)
-                .verticalScroll(rememberScrollState()), // Permite scroll si el teclado tapa algo
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // ... campos de texto (se mantienen igual porque ya usan los estados) ...
             Text(
                 text = "Información de la actividad",
                 style = MaterialTheme.typography.titleMedium,
@@ -110,21 +112,21 @@ fun PantallaFormularioActividad(
             Button(
                 onClick = {
                     if (esValido) {
-                        val nuevaActividad = ActividadFormativa(
-                            id = System.currentTimeMillis(), // ID único temporal
+                        val actividadFinal = ActividadFormativa(
+                            id = actividadInicial?.id ?: System.currentTimeMillis(), // Mantener ID si existe
                             titulo = titulo.trim(),
                             descripcion = descripcion.trim().ifBlank { null },
-                            progreso = 0,
-                            diasRestantes = 7, // Valor por defecto
+                            progreso = actividadInicial?.progreso ?: 0, // Mantener progreso
+                            diasRestantes = actividadInicial?.diasRestantes ?: 7,
                             prioridad = prioridad
                         )
-                        onGuardar(nuevaActividad)
+                        onGuardar(actividadFinal)
                     }
                 },
-                enabled = esValido, // El botón se deshabilita si no es válido
+                enabled = esValido,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Guardar Actividad")
+                Text(if (actividadInicial == null) "Guardar Actividad" else "Actualizar Actividad")
             }
         }
     }

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -27,7 +28,8 @@ import com.example.miformacionctma.domain.estadoActividad
 @Composable
 fun PantallaDetalleActividad(
     actividad: ActividadFormativa,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onEditar: () -> Unit // Nueva acción
 ) {
     val estado = estadoActividad(actividad)
 
@@ -38,6 +40,11 @@ fun PantallaDetalleActividad(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Regresar")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onEditar) {
+                        Icon(Icons.Default.Edit, contentDescription = "Editar actividad")
                     }
                 }
             )

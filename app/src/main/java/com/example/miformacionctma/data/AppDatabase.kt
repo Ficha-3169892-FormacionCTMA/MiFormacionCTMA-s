@@ -23,7 +23,9 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "actividades_db"
-                ).build()
+                )
+                .fallbackToDestructiveMigration() // Añadimos esto para evitar crashes por versiones
+                .build()
                 INSTANCE = instance
                 instance
             }

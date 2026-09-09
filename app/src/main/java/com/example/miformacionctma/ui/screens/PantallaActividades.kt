@@ -20,8 +20,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Assignment
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
@@ -41,11 +43,12 @@ import com.example.miformacionctma.domain.ActividadFormativa
 import com.example.miformacionctma.domain.Prioridad
 import com.example.miformacionctma.ui.components.ResumenActividades
 import com.example.miformacionctma.ui.components.TarjetaActividad
+import com.example.miformacionctma.ui.viewmodels.ListadoUiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaActividades(
-    actividades: List<ActividadFormativa>,
+    uiState: ListadoUiState, // Ahora usamos el estado sellado
     busqueda: String,
     prioridadSeleccionada: Prioridad?,
     onBusquedaChange: (String) -> Unit,
@@ -56,110 +59,106 @@ fun PantallaActividades(
     onBorrarActividad: (ActividadFormativa) -> Unit
 ) {
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text("Mi Formación CTMA")
-                }
-            )
-        },
+        topBar = { TopAppBar(title = { Text("Mi Formación CTMA") }) },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onAgregarClick,
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                containerColor = MaterialTheme.colorScheme.primaryContainer
             ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Agregar actividad"
-                )
+                Icon(Icons.Default.Add, contentDescription = "Agregar")
             }
         }
     ) { paddingValues ->
-
-        if (actividades.isEmpty()) {
-            EstadoVacio(
-                paddingValues = paddingValues,
-                onAgregarClick = onAgregarClick
-            )
-        } else {
-            BoxWithConstraints(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            ) {
-                if (maxWidth < 600.dp) {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 16.dp),
-                        contentPadding = PaddingValues(vertical = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        item {
-                            SeccionFiltros(
-                                busqueda = busqueda,
-                                prioridadSeleccionada = prioridadSeleccionada,
-                                onBusquedaChange = onBusquedaChange,
-                                onPrioridadChange = onPrioridadChange
-                            )
-                        }
-                        
-                        item {
-                            ResumenActividades(actividades = actividades)
-                        }
-
-                        items(
-                            items = actividades,
-                            key = { actividad -> actividad.id }
-                        ) { actividad ->
-                            TarjetaActividad(
-                                actividad = actividad,
-                                onClick = { onActividadClick(actividad) },
-                                onCompletar = { onCompletarActividad(actividad) },
-                                onBorrar = { onBorrarActividad(actividad) }
-                            )
-                        }
-                    }
-                } else {
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(2),
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 16.dp),
-                        contentPadding = PaddingValues(vertical = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
-                            SeccionFiltros(
-                                busqueda = busqueda,
-                                prioridadSeleccionada = prioridadSeleccionada,
-                                onBusquedaChange = onBusquedaChange,
-                                onPrioridadChange = onPrioridadChange
-                            )
-                        }
-
-                        item(
-                            span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }
-                        ) {
-                            ResumenActividades(actividades = actividades)
-                        }
-
-                        items(
-                            items = actividades,
-                            key = { actividad -> actividad.id }
-                        ) { actividad ->
-                            TarjetaActividad(
-                                actividad = actividad,
-                                onClick = { onActividadClick(actividad) },
-                                onCompletar = { onCompletarActividad(actividad) },
-                                onBorrar = { onBorrarActividad(actividad) }
-                            )
-                        }
-                    }
+        Column(modifier = Modifier.padding(paddingValues)) {
+            
+            // Los filtros siempre están visibles si no hay un error crítico
+            if (uiState !is ListadoUiState.Error) {
+                Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                    SeccionFiltros(
+                        busqueda = busqueda,
+                        prioridadSeleccionada = prioridadSeleccionada,
+                        onBusquedaChange = onBusquedaChange,
+                        onPrioridadChange = onPrioridadChange
+                    )
                 }
             }
+
+            // Manejo de estados según la Semana 7
+            when (uiState) {
+                is ListadoUiState.Cargando -> EstadoCargando()
+                is ListadoUiState.Error -> EstadoError(uiState.mensaje)
+                is ListadoUiState.Vacio -> EstadoVacio(onAgregarClick)
+                is ListadoUiState.Contenido -> ListaContenido(
+                    actividades = uiState.actividades,
+                    onActividadClick = onActividadClick,
+                    onCompletarActividad = onCompletarActividad,
+                    onBorrarActividad = onBorrarActividad
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ListaContenido(
+    actividades: List<ActividadFormativa>,
+    onActividadClick: (ActividadFormativa) -> Unit,
+    onCompletarActividad: (ActividadFormativa) -> Unit,
+    onBorrarActividad: (ActividadFormativa) -> Unit
+) {
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        if (maxWidth < 600.dp) {
+            LazyColumn(
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                item { ResumenActividades(actividades = actividades) }
+                items(actividades, key = { it.id }) { actividad ->
+                    TarjetaActividad(
+                        actividad = actividad,
+                        onClick = { onActividadClick(actividad) },
+                        onCompletar = { onCompletarActividad(actividad) },
+                        onBorrar = { onBorrarActividad(actividad) }
+                    )
+                }
+            }
+        } else {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                contentPadding = PaddingValues(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
+                    ResumenActividades(actividades = actividades)
+                }
+                items(actividades, key = { it.id }) { actividad ->
+                    TarjetaActividad(
+                        actividad = actividad,
+                        onClick = { onActividadClick(actividad) },
+                        onCompletar = { onCompletarActividad(actividad) },
+                        onBorrar = { onBorrarActividad(actividad) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EstadoCargando() {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        CircularProgressIndicator()
+    }
+}
+
+@Composable
+private fun EstadoError(mensaje: String) {
+    Box(modifier = Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(Icons.Default.Error, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.error)
+            Spacer(Modifier.size(16.dp))
+            Text(mensaje, textAlign = TextAlign.Center, style = MaterialTheme.typography.bodyLarge)
         }
     }
 }
@@ -179,24 +178,13 @@ private fun SeccionFiltros(
             placeholder = { Text("Buscar actividad...") },
             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
             singleLine = true,
-            shape = MaterialTheme.shapes.medium,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.surface,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surface
-            )
+            shape = MaterialTheme.shapes.medium
         )
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Prioridad.entries.forEach { prioridad ->
                 FilterChip(
                     selected = prioridadSeleccionada == prioridad,
-                    onClick = { 
-                        if (prioridadSeleccionada == prioridad) onPrioridadChange(null)
-                        else onPrioridadChange(prioridad)
-                    },
+                    onClick = { onPrioridadChange(if (prioridadSeleccionada == prioridad) null else prioridad) },
                     label = { Text(prioridad.name) }
                 )
             }
@@ -205,50 +193,14 @@ private fun SeccionFiltros(
 }
 
 @Composable
-private fun EstadoVacio(
-    paddingValues: PaddingValues,
-    onAgregarClick: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.padding(32.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Assignment,
-                contentDescription = null,
-                modifier = Modifier.size(100.dp),
-                tint = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
-            )
-
-            Text(
-                text = "No hay actividades",
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            Text(
-                text = "Aún no tienes actividades registradas. Empieza agregando una nueva actividad formativa para realizar el seguimiento.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
-
-            Button(
-                onClick = onAgregarClick,
-                modifier = Modifier.padding(top = 8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
+private fun EstadoVacio(onAgregarClick: () -> Unit) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(32.dp)) {
+            Icon(Icons.Default.Assignment, contentDescription = null, modifier = Modifier.size(100.dp), tint = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
+            Text("No hay actividades", style = MaterialTheme.typography.headlineSmall)
+            Text("Empieza agregando una nueva actividad formativa.", textAlign = TextAlign.Center)
+            Button(onClick = onAgregarClick, modifier = Modifier.padding(top = 16.dp)) {
+                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
                 Text("Agregar actividad")
             }
