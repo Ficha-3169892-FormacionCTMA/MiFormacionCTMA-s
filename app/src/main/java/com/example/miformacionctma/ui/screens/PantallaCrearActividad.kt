@@ -1,12 +1,15 @@
 package com.example.miformacionctma.ui.screens
 
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import com.example.miformacionctma.domain.ActividadFormativa
 import com.example.miformacionctma.domain.Prioridad
 import com.example.miformacionctma.domain.validarActividad
@@ -62,41 +65,52 @@ fun PantallaCrearActividad(
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            TopAppBar(
-                title = { Text("Nueva Actividad") },
+            CenterAlignedTopAppBar(
+                title = { Text("Nueva Actividad", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Atrás")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Atrás")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
+                )
             )
         }
     ) { padding ->
-        FormularioActividad(
-            state = uiState,
-            onTituloChange = { titulo = it },
-            onDescripcionChange = { descripcion = it },
-            onFechaChange = { fecha = it },
-            onPrioridadChange = { prioridad = it },
-            onProgresoChange = { progreso = it },
-            onGuardarClick = {
-                if (uiState.puedeGuardar) {
-                    guardando = true
-                    onActividadGuardada(
-                        ActividadFormativa(
-                            id = System.currentTimeMillis(),
-                            titulo = titulo,
-                            descripcion = descripcion.ifBlank { null },
-                            progreso = progreso.toIntOrNull() ?: 0,
-                            fecha = fecha,
-                            diasRestantes = 0, // Se podría calcular pero no es requisito para el guardado
-                            prioridad = prioridad
+        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
+            FormularioActividad(
+                state = uiState,
+                onTituloChange = { titulo = it },
+                onDescripcionChange = { descripcion = it },
+                onFechaChange = { fecha = it },
+                onPrioridadChange = { prioridad = it },
+                onProgresoChange = { progreso = it },
+                onGuardarClick = {
+                    if (uiState.puedeGuardar) {
+                        guardando = true
+                        onActividadGuardada(
+                            ActividadFormativa(
+                                id = System.currentTimeMillis(),
+                                titulo = titulo,
+                                descripcion = descripcion.ifBlank { null },
+                                progreso = progreso.toIntOrNull() ?: 0,
+                                fecha = fecha,
+                                diasRestantes = 0,
+                                prioridad = prioridad
+                            )
                         )
-                    )
+                    }
                 }
-            },
-            modifier = Modifier.padding(padding)
-        )
+            )
+
+            if (guardando) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
+        }
     }
 }
