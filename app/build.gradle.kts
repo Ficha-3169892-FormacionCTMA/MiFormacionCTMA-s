@@ -45,7 +45,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.compose.material.icons.extended)
 
-    // Room (Solo librerías de tiempo de ejecución)
+    // Room (Solo librerías básicas, sin procesador para evitar errores)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
 
