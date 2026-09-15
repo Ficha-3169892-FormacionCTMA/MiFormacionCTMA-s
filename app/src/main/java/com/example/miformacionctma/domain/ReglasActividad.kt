@@ -48,6 +48,16 @@ fun validarActividad(actividad: ActividadFormativa): List<String> {
     return errores
 }
 
+fun validarEvidencia(mimeType: String, size: Long): String? {
+    if (size > 5 * 1024 * 1024) {
+        return "La imagen supera el límite de 5MB."
+    }
+    if (!mimeType.startsWith("image/")) {
+        return "Solo se permiten archivos de imagen."
+    }
+    return null
+}
+
 fun estadoActividad(actividad: ActividadFormativa): String {
 
     return when {

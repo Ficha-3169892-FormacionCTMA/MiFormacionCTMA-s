@@ -93,7 +93,7 @@ fun PantallaCrearActividad(
                         guardando = true
                         onActividadGuardada(
                             ActividadFormativa(
-                                id = System.currentTimeMillis(),
+                                id = 0L, // ID 0L para que Supabase lo autogenere
                                 titulo = titulo,
                                 descripcion = descripcion.ifBlank { null },
                                 progreso = progreso.toIntOrNull() ?: 0,

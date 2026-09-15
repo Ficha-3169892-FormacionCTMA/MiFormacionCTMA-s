@@ -104,17 +104,32 @@ class ReglasActividadTest {
     }
 
     @Test
-    fun `HU 4 CP-10 - Verificar funcionalidad existente - Formato fecha`() {
+    fun `HU 4 CP-11 - Verificar funcionalidad existente - Fecha pasada`() {
         val actividad = ActividadFormativa(
             id = 1L,
             titulo = "Título",
             descripcion = "Desc",
             progreso = 50,
-            fecha = "invalida",
+            fecha = "2020-01-01",
+            diasRestantes = -1000,
+            prioridad = Prioridad.ALTA
+        )
+        val errores = validarActividad(actividad)
+        assertTrue(errores.contains("La fecha no puede ser anterior a hoy."))
+    }
+
+    @Test
+    fun `HU 4 CP-12 - Verificar tarjetas de actividades - Descripción demasiado larga`() {
+        val actividad = ActividadFormativa(
+            id = 1L,
+            titulo = "Título",
+            descripcion = "a".repeat(241),
+            progreso = 50,
+            fecha = getHoyStr(),
             diasRestantes = 5,
             prioridad = Prioridad.ALTA
         )
         val errores = validarActividad(actividad)
-        assertTrue(errores.contains("El formato de fecha debe ser YYYY-MM-DD."))
+        assertTrue(errores.contains("La descripción no debe superar los 240 caracteres."))
     }
 }
