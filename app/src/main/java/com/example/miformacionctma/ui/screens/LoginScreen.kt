@@ -23,14 +23,17 @@ import com.example.miformacionctma.domain.model.Role
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
-    onLogin: (String, String, Role) -> Unit,
-    onNavigateToRegister: () -> Unit
+    onLogin: (String, String) -> Unit,
+    onNavigateToRegister: () -> Unit,
+    externalError: String? = null,
+    isLoading: Boolean = false
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var isPasswordVisible by remember { mutableStateOf(false) }
-    var selectedRole by remember { mutableStateOf(Role.STUDENT) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    val actualError = externalError ?: errorMessage
 
     fun validarEIniciarSesion() {
         if (email.isBlank() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
@@ -42,7 +45,7 @@ fun LoginScreen(
             return
         }
         errorMessage = null
-        onLogin(email, password, selectedRole)
+        onLogin(email, password)
     }
 
     Surface(
@@ -124,34 +127,8 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Selección de Rol
-            Text(
-                text = "Selecciona tu Rol",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.align(Alignment.Start)
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                FilterChip(
-                    selected = selectedRole == Role.STUDENT,
-                    onClick = { selectedRole = Role.STUDENT },
-                    label = { Text("Aprendiz") },
-                    modifier = Modifier.weight(1f)
-                )
-                FilterChip(
-                    selected = selectedRole == Role.INSTRUCTOR,
-                    onClick = { selectedRole = Role.INSTRUCTOR },
-                    label = { Text("Instructor") },
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
             // Mensaje de Error
-            errorMessage?.let { error ->
+            actualError?.let { error ->
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = error,
@@ -165,16 +142,21 @@ fun LoginScreen(
             // Botón de Iniciar Sesión
             Button(
                 onClick = { validarEIniciarSesion() },
+                enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
                 shape = RoundedCornerShape(16.dp)
             ) {
-                Text(
-                    text = "Iniciar Sesión",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
+                if (isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
+                } else {
+                    Text(
+                        text = "Iniciar Sesión",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))

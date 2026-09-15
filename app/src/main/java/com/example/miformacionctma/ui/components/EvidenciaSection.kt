@@ -8,12 +8,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -25,13 +27,33 @@ fun EvidenciaSection(
     evidencia: Evidencia?,
     onEvidenciaCaptured: (Uri) -> Unit,
     onRemove: () -> Unit,
+    onDelete: () -> Unit = {},
     canEdit: Boolean = true
 ) {
+    var showFullScreen by remember { mutableStateOf(false) }
+
     // Launcher únicamente para seleccionar imágenes de la Galería
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         uri?.let { onEvidenciaCaptured(it) }
+    }
+
+    if (showFullScreen && evidencia != null) {
+        AlertDialog(
+            onDismissRequest = { showFullScreen = false },
+            confirmButton = {
+                TextButton(onClick = { showFullScreen = false }) { Text("Cerrar") }
+            },
+            text = {
+                AsyncImage(
+                    model = evidencia.uri,
+                    contentDescription = "Pantalla completa",
+                    modifier = Modifier.fillMaxWidth().aspectRatio(1f),
+                    contentScale = ContentScale.Fit
+                )
+            }
+        )
     }
 
     Card(
@@ -52,21 +74,57 @@ fun EvidenciaSection(
 
             if (evidencia != null) {
                 Box(modifier = Modifier.fillMaxWidth().height(200.dp)) {
-                    AsyncImage(
-                        model = evidencia.uri,
-                        contentDescription = "Vista previa",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
+                    Surface(
+                        onClick = { showFullScreen = true },
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        AsyncImage(
+                            model = evidencia.uri,
+                            contentDescription = "Vista previa",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
 
-                    if (canEdit) {
-                        Surface(
-                            modifier = Modifier.align(Alignment.TopEnd).padding(8.dp),
-                            color = MaterialTheme.colorScheme.error.copy(alpha = 0.8f),
-                            shape = RoundedCornerShape(8.dp)
+                    if (evidencia.status == EvidenciaStatus.SUBIENDO) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
                         ) {
-                            IconButton(onClick = onRemove) {
-                                Icon(Icons.Default.Refresh, contentDescription = "Cambiar", tint = MaterialTheme.colorScheme.onError)
+                            CircularProgressIndicator(color = Color.White)
+                        }
+                    }
+
+                    if (canEdit && evidencia.status != EvidenciaStatus.SUBIENDO) {
+                        Row(
+                            modifier = Modifier.align(Alignment.TopEnd).padding(8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Surface(
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                IconButton(onClick = onRemove) {
+                                    Icon(
+                                        Icons.Default.Refresh,
+                                        contentDescription = "Cambiar",
+                                        tint = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                }
+                            }
+
+                            Surface(
+                                color = MaterialTheme.colorScheme.error.copy(alpha = 0.8f),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                IconButton(onClick = onDelete) {
+                                    Icon(
+                                        Icons.Default.Delete,
+                                        contentDescription = "Eliminar",
+                                        tint = MaterialTheme.colorScheme.onError
+                                    )
+                                }
                             }
                         }
                     }
@@ -74,11 +132,21 @@ fun EvidenciaSection(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Text(
-                    text = "Estado: ${evidencia.status}",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = if (evidencia.status == EvidenciaStatus.FALLIDA) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (evidencia.status == EvidenciaStatus.SUBIENDO) {
+                        Text(
+                            text = "Subiendo a la nube...",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                    } else {
+                        Text(
+                            text = "Estado: ${evidencia.status}",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = if (evidencia.status == EvidenciaStatus.FALLIDA) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
             } else if (canEdit) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),

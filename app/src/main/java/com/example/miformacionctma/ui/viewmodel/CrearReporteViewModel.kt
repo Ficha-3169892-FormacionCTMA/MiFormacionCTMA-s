@@ -3,6 +3,7 @@ package com.example.miformacionctma.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import com.example.miformacionctma.domain.Reporte
 import com.example.miformacionctma.domain.ReporteRepository
+import com.example.miformacionctma.data.repository.ReportesRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,7 +18,7 @@ data class CrearUiState(
 )
 
 class CrearReporteViewModel(
-    private val repository: ReporteRepository
+    private val repository: ReporteRepository = ReportesRepository()
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CrearUiState())
     val uiState: StateFlow<CrearUiState> = _uiState.asStateFlow()

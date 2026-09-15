@@ -25,8 +25,10 @@ import com.example.miformacionctma.domain.model.Role
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
-    onRegisterSuccess: () -> Unit,
-    onNavigateToLogin: () -> Unit
+    onRegister: (String, String, String, Role) -> Unit,
+    onNavigateToLogin: () -> Unit,
+    externalError: String? = null,
+    isLoading: Boolean = false
 ) {
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -34,6 +36,8 @@ fun RegisterScreen(
     var isPasswordVisible by remember { mutableStateOf(false) }
     var selectedRole by remember { mutableStateOf(Role.STUDENT) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    val actualError = externalError ?: errorMessage
 
     fun validarYRegistrar() {
         if (username.isBlank()) {
@@ -49,8 +53,7 @@ fun RegisterScreen(
             return
         }
         errorMessage = null
-        // Aquí conectarás con tu AuthViewModel para registrar el usuario
-        onRegisterSuccess()
+        onRegister(email, password, username, selectedRole)
     }
 
     Scaffold(
@@ -177,7 +180,7 @@ fun RegisterScreen(
                 }
 
                 // Mensaje de Error
-                errorMessage?.let { error ->
+                actualError?.let { error ->
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = error,
@@ -191,16 +194,21 @@ fun RegisterScreen(
                 // Botón Registrase
                 Button(
                     onClick = { validarYRegistrar() },
+                    enabled = !isLoading,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
                     shape = RoundedCornerShape(16.dp)
                 ) {
-                    Text(
-                        text = "Registrarse",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
+                    if (isLoading) {
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
+                    } else {
+                        Text(
+                            text = "Registrarse",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }

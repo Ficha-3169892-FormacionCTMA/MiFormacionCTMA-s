@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.example.miformacionctma"
-    compileSdk = 35
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.example.miformacionctma"
@@ -16,6 +16,7 @@ android {
         versionCode = 2
         versionName = "1.1"
 
+        multiDexEnabled = true // <-- Añade esta línea
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -46,6 +47,7 @@ kotlin {
 
 dependencies {
     implementation(platform(libs.androidx.compose.bom))
+    implementation("androidx.multidex:multidex:2.0.1")
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.core)

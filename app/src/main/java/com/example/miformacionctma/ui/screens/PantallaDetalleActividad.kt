@@ -65,7 +65,8 @@ fun PantallaDetalleActividad(
     onBackClick: () -> Unit,
     onDeleteClick: (Long) -> Unit,
     onStatusUpdate: (Long, ActividadEstado) -> Unit,
-    onEvidenciaCaptured: (Long, Uri, String, Long) -> Unit
+    onEvidenciaCaptured: (Long, Uri, String, Long) -> Unit,
+    onEvidenciaDelete: (Long) -> Unit = {}
 ) {
     val actividad = actividades.find { it.id == actividadId }
     val context = LocalContext.current
@@ -174,7 +175,8 @@ fun PantallaDetalleActividad(
                     onEvidenciaCaptured = { _ ->
                         solicitarCamara()
                     },
-                    onRemove = { /* Eliminación si se requiere */ },
+                    onRemove = { solicitarCamara() },
+                    onDelete = { onEvidenciaDelete(actividad.id) },
                     canEdit = userRole == Role.STUDENT
                 )
 

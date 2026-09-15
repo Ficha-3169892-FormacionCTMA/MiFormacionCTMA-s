@@ -8,7 +8,8 @@ data class ActividadDto(
     val id: Long? = null,
     val titulo: String,
     val descripcion: String? = null,
-    val estado: String = "PENDIENTE",
+    val estado: String = "ESPERA",
+    val progreso: Int = 0,
     @SerialName("user_id")
     val userId: String? = null
 )
@@ -27,4 +28,16 @@ data class EvidenciaDto(
     @SerialName("size_bytes")
     val sizeBytes: Long,
     val status: String = "SUBIDA"
+)
+
+@Serializable
+data class ActividadDtoWithEvidencias(
+    val id: Long? = null,
+    val titulo: String,
+    val descripcion: String? = null,
+    val estado: String = "ESPERA",
+    val progreso: Int = 0,
+    @SerialName("user_id")
+    val userId: String? = null,
+    val evidencias: List<EvidenciaDto> = emptyList()
 )

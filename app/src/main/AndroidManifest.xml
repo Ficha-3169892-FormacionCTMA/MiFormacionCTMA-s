@@ -24,7 +24,7 @@
 
         <!-- MainActivity con sintaxis relativa -->
         <activity
-            android:name="MainActivity"
+            android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

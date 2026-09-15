@@ -12,11 +12,11 @@ class ActividadRepositoryImpl {
 
     private val client = SupabaseClient.client
 
-    // Obtener actividades desde la tabla de Supabase
-    suspend fun getActividades(): List<ActividadDto> = withContext(Dispatchers.IO) {
+    // Obtener actividades desde la tabla de Supabase con soporte para evidencias embebidas si existen
+    suspend fun getActividades(): List<com.example.miformacionctma.data.model.ActividadDtoWithEvidencias> = withContext(Dispatchers.IO) {
         client.postgrest["actividades"]
-            .select()
-            .decodeList<ActividadDto>()
+            .select(io.github.jan.supabase.postgrest.query.Columns.raw("*, evidencias(*)"))
+            .decodeList<com.example.miformacionctma.data.model.ActividadDtoWithEvidencias>()
     }
 
     // Insertar actividad en Supabase
@@ -44,6 +44,25 @@ class ActividadRepositoryImpl {
             .insert(evidencia)
     }
 
+    // Eliminar registro de evidencia de la base de datos
+    suspend fun deleteEvidencia(id: Long) = withContext(Dispatchers.IO) {
+        client.postgrest["evidencias"]
+            .delete {
+                filter {
+                    eq("id", id)
+                }
+            }
+    }
+
+    suspend fun deleteEvidenciaPorActividad(actividadId: Long) = withContext(Dispatchers.IO) {
+        client.postgrest["evidencias"]
+            .delete {
+                filter {
+                    eq("actividad_id", actividadId)
+                }
+            }
+    }
+
     // Subir foto al bucket 'evidencias' en Supabase Storage
     suspend fun uploadImagenEvidencia(
         bucketName: String = "evidencias",
@@ -55,5 +74,14 @@ class ActividadRepositoryImpl {
             upsert = true
         }
         bucket.publicUrl(fileName)
+    }
+
+    // Eliminar archivo del Storage de Supabase
+    suspend fun deleteImagenEvidencia(
+        bucketName: String = "evidencias",
+        filePath: String
+    ) = withContext(Dispatchers.IO) {
+        val bucket = client.storage[bucketName]
+        bucket.delete(filePath)
     }
 }

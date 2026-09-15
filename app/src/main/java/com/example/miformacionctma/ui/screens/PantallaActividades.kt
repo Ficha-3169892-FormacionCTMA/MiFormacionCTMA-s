@@ -37,13 +37,30 @@ fun PantallaActividades(
     onActividadClick: (Long) -> Unit,
     onAddClick: () -> Unit,
     onDeleteClick: (Long) -> Unit,
-    onReportesClick: () -> Unit = {}
+    onReportesClick: () -> Unit = {},
+    onLogoutClick: () -> Unit = {},
+    operacionState: com.example.miformacionctma.ui.state.OperacionUiState = com.example.miformacionctma.ui.state.OperacionUiState.Inactiva
 ) {
+    val snackbarHostState = remember { SnackbarHostState() }
+    
+    LaunchedEffect(operacionState) {
+        when (operacionState) {
+            is com.example.miformacionctma.ui.state.OperacionUiState.Fallida -> {
+                snackbarHostState.showSnackbar(operacionState.mensaje)
+            }
+            is com.example.miformacionctma.ui.state.OperacionUiState.Exitosa -> {
+                snackbarHostState.showSnackbar("Operación realizada con éxito")
+            }
+            else -> {}
+        }
+    }
+
     var searchBarVisible by remember { mutableStateOf(false) }
     val esInstructor = usuario.role == Role.INSTRUCTOR
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -59,6 +76,9 @@ fun PantallaActividades(
                     }
                     IconButton(onClick = { searchBarVisible = !searchBarVisible }) {
                         Icon(Icons.Default.Search, contentDescription = "Buscar")
+                    }
+                    IconButton(onClick = onLogoutClick) {
+                        Icon(Icons.Default.ExitToApp, contentDescription = "Cerrar Sesión")
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -85,6 +105,45 @@ fun PantallaActividades(
         }
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
+            // Banner de sesión de usuario
+            Surface(
+                color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = if (esInstructor) Icons.Default.School else Icons.Default.Person,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.secondary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Hola, ${usuario.username}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    SuggestionChip(
+                        onClick = { },
+                        label = {
+                            Text(
+                                text = if (esInstructor) "Instructor" else "Aprendiz",
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        },
+                        colors = SuggestionChipDefaults.suggestionChipColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+                        )
+                    )
+                }
+            }
+
             if (searchBarVisible) {
                 OutlinedTextField(
                     value = searchQuery,
