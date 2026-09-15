@@ -24,7 +24,7 @@ import com.example.miformacionctma.domain.estadoActividad
 fun TarjetaActividad(
     actividad: ActividadFormativa,
     onClick: () -> Unit,
-    onDeleteClick: () -> Unit = {} // Valor por defecto para compatibilidad
+    onDeleteClick: (() -> Unit)? = null // <-- CAMBIO AQUÍ: Ahora acepta null y su valor por defecto es null
 ) {
     val estado = estadoActividad(actividad)
     val colorPrioridad = when (actividad.prioridad) {
@@ -78,14 +78,18 @@ fun TarjetaActividad(
                             color = colorPrioridad
                         )
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    IconButton(onClick = onDeleteClick) {
-                        Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = "Eliminar",
-                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f),
-                            modifier = Modifier.size(20.dp)
-                        )
+
+                    // CAMBIO AQUÍ: Solo muestra el botón si onDeleteClick NO es nulo
+                    if (onDeleteClick != null) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        IconButton(onClick = onDeleteClick) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Eliminar",
+                                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
                 }
             }

@@ -4,82 +4,97 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.remember
-import androidx.navigation.NavType
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
+import com.example.miformacionctma.domain.model.Role
+import com.example.miformacionctma.domain.model.User // <-- Importación que soluciona el error
+import com.example.miformacionctma.ui.screens.LoginScreen
 import com.example.miformacionctma.ui.screens.PantallaActividades
-import com.example.miformacionctma.ui.screens.PantallaCrearActividad
-import com.example.miformacionctma.ui.screens.PantallaDetalleActividad
+import com.example.miformacionctma.ui.screens.RegisterScreen
 import com.example.miformacionctma.ui.theme.MiFormacionCTMATheme
+import com.example.miformacionctma.ui.viewmodel.ActividadViewModel
 
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+@Composable
+fun AppNavigation(modifier: Modifier = Modifier) {
+    val navController = rememberNavController()
 
-        setContent {
-            MiFormacionCTMATheme {
-                val navController = rememberNavController()
-                val actividades = remember { mutableStateListOf(*actividadesEjemplo.toTypedArray()) }
-
-                NavHost(navController = navController, startDestination = "lista") {
-                    composable("lista") {
-                        PantallaActividades(
-                            actividades = actividades,
-                            onActividadClick = { id ->
-                                navController.navigate("detalle/$id")
-                            },
-                            onAddClick = {
-                                navController.navigate("crear")
-                            },
-                            onDeleteClick = { id ->
-                                actividades.removeAll { it.id == id }
-                            }
-                        )
+    NavHost(
+        navController = navController,
+        startDestination = "login",
+        modifier = modifier
+    ) {
+        // 1. Pantalla de Iniciar Sesión
+        composable("login") {
+            LoginScreen(
+                onLogin = { email, password, role ->
+                    // Aquí procesas la autenticación y navegas
+                    navController.navigate("actividades") {
+                        popUpTo("login") { inclusive = true }
                     }
-
-                    composable("crear") {
-                        PantallaCrearActividad(
-                            onActividadGuardada = { nuevaActividad ->
-                                actividades.add(nuevaActividad)
-                                navController.popBackStack("lista", inclusive = false)
-                            },
-                            onBackClick = {
-                                navController.popBackStack()
-                            }
-                        )
-                    }
-
-                    composable(
-                        route = "detalle/{actividadId}",
-                        arguments = listOf(navArgument("actividadId") { type = NavType.LongType })
-                    ) { backStackEntry ->
-                        val id = backStackEntry.arguments?.getLong("actividadId") ?: 0L
-                        PantallaDetalleActividad(
-                            actividadId = id,
-                            actividades = actividades,
-                            onBackClick = {
-                                navController.popBackStack()
-                            },
-                            onDeleteClick = { deleteId ->
-                                actividades.removeAll { it.id == deleteId }
-                                navController.popBackStack("lista", inclusive = false)
-                            },
-                            onProgressUpdate = { updateId, newProgress ->
-                                val index = actividades.indexOfFirst { it.id == updateId }
-                                if (index != -1) {
-                                    val current = actividades[index]
-                                    actividades[index] = current.copy(progreso = newProgress)
-                                }
-                            }
-                        )
-                    }
+                },
+                onNavigateToRegister = {
+                    navController.navigate("register")
                 }
-            }
+            )
+        }
+
+        // 2. Pantalla de Registro
+        composable("register") {
+            RegisterScreen(
+                onRegisterSuccess = {
+                    navController.navigate("actividades") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                },
+                onNavigateToLogin = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        // 3. Pantalla de Actividades
+        composable("actividades") {
+            val actividadViewModel: ActividadViewModel = viewModel()
+
+            // Obtenemos los estados observados desde el ViewModel
+            val uiState by actividadViewModel.uiState.collectAsState()
+            val searchQuery by actividadViewModel.searchQuery.collectAsState()
+
+            // Usuario de prueba o proveniente de tu sesión actual / AuthViewModel
+            val usuarioActual = User(
+                username = "Santiago", // O una cadena representando un ID/correo si lo usas como String
+                role = Role.INSTRUCTOR
+            )
+
+            PantallaActividades(
+                usuario = usuarioActual,
+                uiState = uiState,
+                searchQuery = searchQuery,
+                onSearchQueryChange = { query ->
+                    actividadViewModel.actualizarBusqueda(query)
+                },
+                onActividadClick = { idActividad ->
+                    navController.navigate("detalle_actividad/$idActividad")
+                },
+                onAddClick = {
+                    navController.navigate("crear_actividad")
+                },
+                onDeleteClick = { idActividad ->
+                    actividadViewModel.eliminarActividad(idActividad)
+                },
+                onReportesClick = {
+                    navController.navigate("reportes")
+                }
+            )
         }
     }
 }

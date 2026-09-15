@@ -1,4 +1,4 @@
-package com.example.miformacionctma.ui.screens
+package com.example.miformacionctma.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import com.example.miformacionctma.domain.Reporte

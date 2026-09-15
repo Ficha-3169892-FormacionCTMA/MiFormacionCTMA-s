@@ -1,32 +1,122 @@
 package com.example.miformacionctma.ui.screens
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import com.example.miformacionctma.domain.ActividadFormativa
-import com.example.miformacionctma.domain.estadoActividad
+import com.example.miformacionctma.domain.model.ActividadEstado
+import com.example.miformacionctma.domain.model.Role
+import com.example.miformacionctma.ui.components.EvidenciaSection
+import com.example.miformacionctma.util.FileUtils
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
+private fun obtenerUriSegura(context: Context): Uri? {
+    return try {
+        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val fileName = "EVIDENCIA_${timeStamp}_"
+
+        // Debe coincidir con la ruta definida en file_paths.xml ("evidencias/")
+        val storageDir = File(context.getExternalFilesDir(null), "evidencias")
+        if (!storageDir.exists()) {
+            storageDir.mkdirs()
+        }
+
+        val file = File.createTempFile(fileName, ".jpg", storageDir)
+
+        FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            file
+        )
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaDetalleActividad(
     actividadId: Long,
     actividades: List<ActividadFormativa>,
+    userRole: Role,
     onBackClick: () -> Unit,
     onDeleteClick: (Long) -> Unit,
-    onProgressUpdate: (Long, Int) -> Unit
+    onStatusUpdate: (Long, ActividadEstado) -> Unit,
+    onEvidenciaCaptured: (Long, Uri, String, Long) -> Unit
 ) {
     val actividad = actividades.find { it.id == actividadId }
+    val context = LocalContext.current
+
+    var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
+
+    // Launcher para tomar la foto
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { exito ->
+        if (exito && tempCameraUri != null && actividad != null) {
+            val (mime, size) = FileUtils.getMetadata(context, tempCameraUri!!)
+            onEvidenciaCaptured(actividad.id, tempCameraUri!!, mime, size)
+        }
+    }
+
+    // Función desacoplada para lanzar la cámara con la Uri ya lista
+    val ejecutarLanzamientoCamara = {
+        val uri = obtenerUriSegura(context)
+        if (uri != null) {
+            tempCameraUri = uri
+            cameraLauncher.launch(uri)
+        } else {
+            Toast.makeText(context, "Error al crear el archivo de imagen", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // Launcher para solicitar el permiso
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { concedido ->
+        if (concedido) {
+            ejecutarLanzamientoCamara()
+        } else {
+            Toast.makeText(context, "Se requiere permiso de cámara", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // Función principal invocada al hacer clic
+    val solicitarCamara = {
+        val tienePermiso = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.CAMERA
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (tienePermiso) {
+            ejecutarLanzamientoCamara()
+        } else {
+            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -39,7 +129,7 @@ fun PantallaDetalleActividad(
                     }
                 },
                 actions = {
-                    if (actividad != null) {
+                    if (actividad != null && userRole == Role.INSTRUCTOR) {
                         IconButton(onClick = { onDeleteClick(actividad.id) }) {
                             Icon(
                                 imageVector = Icons.Default.Delete,
@@ -48,26 +138,13 @@ fun PantallaDetalleActividad(
                             )
                         }
                     }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
+                }
             )
         }
     ) { padding ->
         if (actividad == null) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Text("¡Vaya! No encontramos esta actividad.", style = MaterialTheme.typography.titleLarge)
-                    Button(onClick = onBackClick, shape = RoundedCornerShape(12.dp)) {
-                        Text("Volver al listado")
-                    }
-                }
+            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                Text("Actividad no encontrada")
             }
         } else {
             Column(
@@ -80,87 +157,49 @@ fun PantallaDetalleActividad(
             ) {
                 ElevatedCard(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)),
-                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 0.dp)
+                    shape = RoundedCornerShape(28.dp)
                 ) {
-                    Column(modifier = Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(modifier = Modifier.padding(24.dp)) {
                         Text(
                             text = actividad.titulo,
                             style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.primary
+                            fontWeight = FontWeight.ExtraBold
                         )
-                        Text(
-                            text = "Estado: ${estadoActividad(actividad)}",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.secondary
-                        )
+                        Text(text = "Estado: ${actividad.estado}", color = MaterialTheme.colorScheme.primary)
                     }
                 }
 
-                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Text("Información General", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    
-                    DetailItem(label = "Descripción", value = actividad.descripcion ?: "Sin descripción detallada.")
-                    DetailItem(label = "Fecha Límite", value = actividad.fecha)
-                    DetailItem(label = "Nivel de Prioridad", value = actividad.prioridad.name)
-                }
-                
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                    )
-                ) {
-                    Column(modifier = Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Tu Avance",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Surface(
-                                color = MaterialTheme.colorScheme.primary,
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Text(
-                                    text = "${actividad.progreso}%",
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
+                EvidenciaSection(
+                    evidencia = actividad.evidencia,
+                    onEvidenciaCaptured = { _ ->
+                        solicitarCamara()
+                    },
+                    onRemove = { /* Eliminación si se requiere */ },
+                    canEdit = userRole == Role.STUDENT
+                )
+
+                if (userRole == Role.INSTRUCTOR) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(20.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text("Cambiar Estado", fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                ActividadEstado.entries.forEach { estado ->
+                                    FilterChip(
+                                        selected = actividad.estado == estado,
+                                        onClick = { onStatusUpdate(actividad.id, estado) },
+                                        label = { Text(estado.name) }
+                                    )
+                                }
                             }
                         }
-                        
-                        Slider(
-                            value = actividad.progreso.toFloat(),
-                            onValueChange = { onProgressUpdate(actividad.id, it.toInt()) },
-                            valueRange = 0f..100f,
-                            steps = 100,
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = SliderDefaults.colors(
-                                thumbColor = MaterialTheme.colorScheme.primary,
-                                activeTrackColor = MaterialTheme.colorScheme.primary
-                            )
-                        )
-                        
-                        Text(
-                            text = if (actividad.progreso == 100) "¡Felicidades! Has completado esta actividad." else "Sigue así, ya casi lo logras.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
                     }
                 }
-                
-                Spacer(modifier = Modifier.height(16.dp))
+
+                DetailItem(label = "Descripción", value = actividad.descripcion ?: "Sin descripción")
             }
         }
     }
@@ -170,17 +209,11 @@ fun PantallaDetalleActividad(
 fun DetailItem(label: String, value: String) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
-            text = label, 
-            style = MaterialTheme.typography.labelMedium, 
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.Bold
         )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = value, 
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        HorizontalDivider(modifier = Modifier.padding(top = 12.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
+        Text(text = value, style = MaterialTheme.typography.bodyLarge)
     }
 }
