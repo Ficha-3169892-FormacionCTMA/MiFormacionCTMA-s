@@ -239,12 +239,10 @@ class ActividadViewModel(
         }
     }
 
-    fun eliminarEvidencia(actividadId: Long, userId: String?) {
+    fun eliminarEvidencia(actividadId: Long, evidenciaId: Long) {
         viewModelScope.launch {
             val actividad = _actividades.value.find { it.id == actividadId }
-            // Buscar la evidencia específica por userId
-            val searchId = if (userId.isNullOrBlank()) null else userId
-            val evidencia = actividad?.evidencias?.find { it.userId == searchId } ?: return@launch
+            val evidencia = actividad?.evidencias?.find { it.id == evidenciaId } ?: return@launch
 
             _operacionState.value = OperacionUiState.EnCurso
             try {
@@ -257,26 +255,20 @@ class ActividadViewModel(
                 
                 repository.deleteImagenEvidencia(filePath = filename)
 
-                // 2. Borrar de la base de datos por actividadId y userId
-                repository.deleteEvidenciaPorUsuario(actividadId, searchId)
+                // 2. Borrar de la base de datos por el ID de la evidencia
+                repository.deleteEvidencia(evidenciaId)
 
                 _actividades.update { lista ->
                     lista.map { act ->
                         if (act.id == actividadId) {
-                            act.copy(evidencias = act.evidencias.filter { it.userId != searchId })
+                            act.copy(evidencias = act.evidencias.filter { it.id != evidenciaId })
                         } else act
                     }
                 }
                 _operacionState.value = OperacionUiState.Exitosa
                 _eventFlow.emit("Evidencia eliminada")
             } catch (e: Exception) {
-                // Mensaje detallado si es error de SQL (columna no existe)
-                val msg = if (e.message?.contains("user_id") == true) {
-                    "Error: Asegúrate de haber ejecutado el SQL en Supabase para crear la columna user_id"
-                } else {
-                    "Error al eliminar evidencia: ${e.message}"
-                }
-                _operacionState.value = OperacionUiState.Fallida(msg)
+                _operacionState.value = OperacionUiState.Fallida("Error al eliminar evidencia: ${e.message}")
             }
         }
     }
