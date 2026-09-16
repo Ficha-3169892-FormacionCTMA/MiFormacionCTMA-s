@@ -19,6 +19,10 @@ data class EvidenciaDto(
     val id: Long? = null,
     @SerialName("actividad_id")
     val actividadId: Long,
+    @SerialName("user_id")
+    val userId: String? = null,
+    @SerialName("user_name")
+    val userName: String? = null,
     @SerialName("file_path")
     val filePath: String,
     @SerialName("file_url")

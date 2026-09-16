@@ -1,6 +1,8 @@
 package com.example.miformacionctma.domain
 
 
+import com.example.miformacionctma.domain.model.ActividadEstado
+import com.example.miformacionctma.domain.model.Role
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -92,5 +94,22 @@ fun buscarPorTitulo(
             titulo.trim(),
             ignoreCase = true
         )
+    }
+}
+
+fun validarRegistro(email: String, pass: String, user: String): List<String> {
+    val errores = mutableListOf<String>()
+    if (user.isBlank()) errores.add("Nombre de usuario obligatorio")
+    if (email.isBlank() || !email.contains("@")) errores.add("Email inválido")
+    if (pass.length < 6) errores.add("Contraseña demasiado corta")
+    return errores
+}
+
+fun calcularProgresoPorEstado(estado: ActividadEstado): Int {
+    return when (estado) {
+        ActividadEstado.LISTA -> 100
+        ActividadEstado.MAL -> 0
+        ActividadEstado.ESPERA -> 10
+        ActividadEstado.EN_CURSO -> 25
     }
 }

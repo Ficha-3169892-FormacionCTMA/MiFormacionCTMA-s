@@ -89,8 +89,18 @@ class ActividadViewModel(
 
     fun actualizarEstado(id: Long, nuevoEstado: ActividadEstado) {
         viewModelScope.launch {
+            val nuevoProgreso = when (nuevoEstado) {
+                ActividadEstado.LISTA -> 100
+                ActividadEstado.MAL -> 0
+                ActividadEstado.ESPERA -> 10
+                ActividadEstado.EN_CURSO -> 25
+            }
+
             _actividades.update { lista ->
-                lista.map { if (it.id == id) it.copy(estado = nuevoEstado) else it }
+                lista.map { 
+                    if (it.id == id) it.copy(estado = nuevoEstado, progreso = nuevoProgreso) 
+                    else it 
+                }
             }
             try {
                 val actividadActual = _actividades.value.find { it.id == id }
@@ -99,6 +109,22 @@ class ActividadViewModel(
                 }
             } catch (e: Exception) {
                 _operacionState.value = OperacionUiState.Fallida("Error al actualizar estado en Supabase")
+            }
+        }
+    }
+
+    fun actualizarProgreso(id: Long, nuevoProgreso: Int) {
+        viewModelScope.launch {
+            _actividades.update { lista ->
+                lista.map { if (it.id == id) it.copy(progreso = nuevoProgreso) else it }
+            }
+            try {
+                val actividadActual = _actividades.value.find { it.id == id }
+                actividadActual?.let {
+                    repository.insertActividad(it.toDto())
+                }
+            } catch (e: Exception) {
+                _operacionState.value = OperacionUiState.Fallida("Error al actualizar progreso en Supabase")
             }
         }
     }
@@ -122,22 +148,26 @@ class ActividadViewModel(
         actividadId: Long,
         uri: Uri,
         mimeType: String,
-        size: Long
+        size: Long,
+        userId: String,
+        username: String
     ) {
         viewModelScope.launch {
+            val nuevaEvidencia = Evidencia(
+                uri = uri.toString(),
+                mimeType = mimeType,
+                size = size,
+                status = EvidenciaStatus.SUBIENDO,
+                actividadId = actividadId,
+                userId = userId,
+                userName = username
+            )
+
             // Actualización inmediata para mostrar la previsualización local
             _actividades.update { lista ->
                 lista.map { actividad ->
                     if (actividad.id == actividadId) {
-                        actividad.copy(
-                            evidencia = Evidencia(
-                                uri = uri.toString(),
-                                mimeType = mimeType,
-                                size = size,
-                                status = EvidenciaStatus.SUBIENDO,
-                                actividadId = actividadId
-                            )
-                        )
+                        actividad.copy(evidencias = actividad.evidencias + nuevaEvidencia)
                     } else actividad
                 }
             }
@@ -147,7 +177,9 @@ class ActividadViewModel(
                 val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
                     ?: throw Exception("No se pudo leer el archivo de la imagen")
 
-                val fileName = "evidencia_${actividadId}_${System.currentTimeMillis()}.jpg"
+                // Nombre del archivo incluye el nombre de usuario
+                val safeUsername = username.replace(" ", "_").lowercase()
+                val fileName = "evidencia_${safeUsername}_${actividadId}_${System.currentTimeMillis()}.jpg"
 
                 val publicUrl = repository.uploadImagenEvidencia(
                     bucketName = "evidencias",
@@ -158,6 +190,8 @@ class ActividadViewModel(
                 repository.insertEvidencia(
                     EvidenciaDto(
                         actividadId = actividadId,
+                        userId = userId,
+                        userName = username,
                         filePath = "evidencias/$fileName",
                         fileUrl = publicUrl,
                         mimeType = mimeType,
@@ -169,23 +203,31 @@ class ActividadViewModel(
                     lista.map { actividad ->
                         if (actividad.id == actividadId) {
                             actividad.copy(
-                                evidencia = actividad.evidencia?.copy(
-                                    status = EvidenciaStatus.SINCRONIZADA,
-                                    remoteUrl = publicUrl
-                                )
+                                evidencias = actividad.evidencias.map {
+                                    if (it.userId == userId && it.status == EvidenciaStatus.SUBIENDO) {
+                                        it.copy(
+                                            status = EvidenciaStatus.SINCRONIZADA,
+                                            remoteUrl = publicUrl
+                                        )
+                                    } else it
+                                }
                             )
                         } else actividad
                     }
                 }
 
                 _operacionState.value = OperacionUiState.Exitosa
-                _eventFlow.emit("Foto de evidencia subida a Supabase Storage")
+                _eventFlow.emit("Foto de evidencia subida por $username")
             } catch (e: Exception) {
                 _actividades.update { lista ->
                     lista.map { actividad ->
                         if (actividad.id == actividadId) {
                             actividad.copy(
-                                evidencia = actividad.evidencia?.copy(status = EvidenciaStatus.FALLIDA)
+                                evidencias = actividad.evidencias.map {
+                                    if (it.userId == userId && it.status == EvidenciaStatus.SUBIENDO) {
+                                        it.copy(status = EvidenciaStatus.FALLIDA)
+                                    } else it
+                                }
                             )
                         } else actividad
                     }
@@ -197,40 +239,44 @@ class ActividadViewModel(
         }
     }
 
-    fun eliminarEvidencia(actividadId: Long) {
+    fun eliminarEvidencia(actividadId: Long, userId: String?) {
         viewModelScope.launch {
             val actividad = _actividades.value.find { it.id == actividadId }
-            val evidencia = actividad?.evidencia ?: return@launch
+            // Buscar la evidencia específica por userId
+            val searchId = if (userId.isNullOrBlank()) null else userId
+            val evidencia = actividad?.evidencias?.find { it.userId == searchId } ?: return@launch
 
             _operacionState.value = OperacionUiState.EnCurso
             try {
-                // 1. Borrar archivo del Storage si existe remoteUrl
-                // Para borrar necesitamos el path relativo. Supabase storage suele guardarlo en remoteUrl pero a veces solo necesitamos el path.
-                // En upload usamos "evidencias/$fileName".
-                val filePath = evidencia.remoteUrl?.substringAfterLast("/public/evidencias/") 
-                    ?: evidencia.uri.substringAfterLast("/")
+                // 1. Borrar archivo del Storage
+                val filename = if (evidencia.remoteUrl != null) {
+                    evidencia.remoteUrl.substringAfterLast("/")
+                } else {
+                    evidencia.uri.substringAfterLast("/")
+                }
                 
-                // Si la URL es la pública de Supabase, suele ser .../storage/v1/object/public/evidencias/archivo.jpg
-                val cleanPath = if (filePath.contains("evidencias/")) filePath.substringAfter("evidencias/") else filePath
-                
-                repository.deleteImagenEvidencia(filePath = cleanPath)
+                repository.deleteImagenEvidencia(filePath = filename)
 
-                // 2. Borrar de la base de datos (se asume que hay un ID de evidencia o se identifica por actividad)
-                // Como nuestra Evidencia no tiene ID propio en el domain, pero si en DTO, y el Repo usa ID de evidencia.
-                // Sin embargo, podemos buscarla por actividadId si solo hay una.
-                // El repository.deleteEvidencia(id) espera el ID de la tabla evidencias.
-                // Necesitamos el ID. Modifiquemos el DTO o el repo para borrar por actividadId.
-                
-                // Por ahora, borremos por actividadId si el repo lo permite o ajustemos el repo.
-                repository.deleteEvidenciaPorActividad(actividadId)
+                // 2. Borrar de la base de datos por actividadId y userId
+                repository.deleteEvidenciaPorUsuario(actividadId, searchId)
 
                 _actividades.update { lista ->
-                    lista.map { if (it.id == actividadId) it.copy(evidencia = null) else it }
+                    lista.map { act ->
+                        if (act.id == actividadId) {
+                            act.copy(evidencias = act.evidencias.filter { it.userId != searchId })
+                        } else act
+                    }
                 }
                 _operacionState.value = OperacionUiState.Exitosa
                 _eventFlow.emit("Evidencia eliminada")
             } catch (e: Exception) {
-                _operacionState.value = OperacionUiState.Fallida("Error al eliminar evidencia: ${e.message}")
+                // Mensaje detallado si es error de SQL (columna no existe)
+                val msg = if (e.message?.contains("user_id") == true) {
+                    "Error: Asegúrate de haber ejecutado el SQL en Supabase para crear la columna user_id"
+                } else {
+                    "Error al eliminar evidencia: ${e.message}"
+                }
+                _operacionState.value = OperacionUiState.Fallida(msg)
             }
         }
     }

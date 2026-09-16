@@ -23,5 +23,5 @@ data class ActividadFormativa(
     val instructorId: String? = null,
     val estudianteId: String? = null,
     val estado: ActividadEstado = ActividadEstado.ESPERA,
-    val evidencia: Evidencia? = null
+    val evidencias: List<Evidencia> = emptyList()
 )
