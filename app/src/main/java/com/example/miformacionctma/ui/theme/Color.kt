@@ -2,16 +2,22 @@ package com.example.miformacionctma.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Primary = Color(0xFF5C6BC0) // Indigo suave
-val OnPrimary = Color(0xFFFFFFFF)
-val PrimaryContainer = Color(0xFFE8EAF6)
-val OnPrimaryContainer = Color(0xFF1A237E)
+val NeonCyan = Color(0xFF00FFFF)
+val NeonGreen = Color(0xFF39FF14)
+val NeonMagenta = Color(0xFFFF007F)
+val NeonPurple = Color(0xFF8A2BE2)
 
-val Secondary = Color(0xFF26A69A) // Teal suave
-val OnSecondary = Color(0xFFFFFFFF)
-val SecondaryContainer = Color(0xFFE0F2F1)
-val OnSecondaryContainer = Color(0xFF004D40)
+val Primary = NeonCyan
+val OnPrimary = Color(0xFF000000)
+val PrimaryContainer = Color(0xFF001F1F)
+val OnPrimaryContainer = NeonCyan
 
-val Background = Color(0xFFF8F9FA)
-val Surface = Color(0xFFFFFFFF)
-val Error = Color(0xFFEF5350)
+val Secondary = NeonGreen
+val OnSecondary = Color(0xFF000000)
+val SecondaryContainer = Color(0xFF0A1F05)
+val OnSecondaryContainer = NeonGreen
+
+val Background = Color(0xFF0A0B10)
+val Surface = Color(0xFF12131C)
+val Error = Color(0xFFFF3333)
+
