@@ -17,5 +17,7 @@ data class Evidencia(
     val size: Long,
     val status: EvidenciaStatus,
     val actividadId: Long,
+    val userId: String? = null,
+    val userName: String? = null,
     val remoteUrl: String? = null
 )

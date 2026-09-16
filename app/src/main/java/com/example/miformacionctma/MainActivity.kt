@@ -172,7 +172,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             PantallaDetalleActividad(
                 actividadId = idActividad,
                 actividades = actividades,
-                userRole = usuarioActual.role,
+                usuario = usuarioActual,
                 onBackClick = {
                     navController.popBackStack()
                 },
@@ -183,11 +183,22 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                 onStatusUpdate = { id, nuevoEstado ->
                     actividadViewModel.actualizarEstado(id, nuevoEstado)
                 },
-                onEvidenciaCaptured = { id, uri, mimeType, size ->
-                    actividadViewModel.subiryAdjuntarEvidencia(context, id, uri, mimeType, size)
+                onProgresoUpdate = { id, progreso ->
+                    actividadViewModel.actualizarProgreso(id, progreso)
                 },
-                onEvidenciaDelete = { id ->
-                    actividadViewModel.eliminarEvidencia(id)
+                onEvidenciaCaptured = { id, uri, mimeType, size ->
+                    actividadViewModel.subiryAdjuntarEvidencia(
+                        context = context,
+                        actividadId = id,
+                        uri = uri,
+                        mimeType = mimeType,
+                        size = size,
+                        userId = usuarioActual.id,
+                        username = usuarioActual.username
+                    )
+                },
+                onEvidenciaDelete = { id, ownerId ->
+                    actividadViewModel.eliminarEvidencia(id, ownerId)
                 }
             )
         }

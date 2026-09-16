@@ -18,25 +18,26 @@ fun ActividadDto.toDomain(): ActividadFormativa {
             "MAL" -> ActividadEstado.MAL
             else -> ActividadEstado.ESPERA
         },
-        progreso = 0,
+        progreso = this.progreso,
         fecha = "",
         diasRestantes = 0,
         prioridad = Prioridad.MEDIA,
         instructorId = null,
         estudianteId = null,
-        evidencia = null
+        evidencias = emptyList()
     )
 }
 
 fun ActividadDtoWithEvidencias.toDomain(): ActividadFormativa {
-    val primeraEvidencia = evidencias.firstOrNull()
-    val evidenciaDomain = primeraEvidencia?.let {
+    val evidenciasDomain = evidencias.map {
         Evidencia(
             uri = it.fileUrl,
             mimeType = it.mimeType,
             size = it.sizeBytes,
             status = EvidenciaStatus.SINCRONIZADA,
             actividadId = it.actividadId,
+            userId = it.userId,
+            userName = it.userName,
             remoteUrl = it.fileUrl
         )
     }
@@ -52,13 +53,13 @@ fun ActividadDtoWithEvidencias.toDomain(): ActividadFormativa {
             "MAL" -> ActividadEstado.MAL
             else -> ActividadEstado.ESPERA
         },
-        progreso = 0,
+        progreso = this.progreso,
         fecha = "",
         diasRestantes = 0,
         prioridad = Prioridad.MEDIA,
         instructorId = null,
         estudianteId = null,
-        evidencia = evidenciaDomain
+        evidencias = evidenciasDomain
     )
 }
 
@@ -67,6 +68,7 @@ fun ActividadFormativa.toDto(): ActividadDto {
         id = if (this.id == 0L) null else this.id,
         titulo = this.titulo,
         descripcion = this.descripcion,
-        estado = this.estado.name
+        estado = this.estado.name,
+        progreso = this.progreso
     )
 }

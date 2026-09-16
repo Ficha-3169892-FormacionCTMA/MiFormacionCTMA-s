@@ -7,7 +7,21 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -17,6 +31,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -25,6 +40,7 @@ import androidx.core.content.FileProvider
 import com.example.miformacionctma.domain.ActividadFormativa
 import com.example.miformacionctma.domain.model.ActividadEstado
 import com.example.miformacionctma.domain.model.Role
+import com.example.miformacionctma.domain.model.User
 import com.example.miformacionctma.ui.components.EvidenciaSection
 import com.example.miformacionctma.util.FileUtils
 import java.io.File
@@ -56,19 +72,21 @@ private fun obtenerUriSegura(context: Context): Uri? {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun PantallaDetalleActividad(
     actividadId: Long,
     actividades: List<ActividadFormativa>,
-    userRole: Role,
+    usuario: User,
     onBackClick: () -> Unit,
     onDeleteClick: (Long) -> Unit,
     onStatusUpdate: (Long, ActividadEstado) -> Unit,
+    onProgresoUpdate: (Long, Int) -> Unit,
     onEvidenciaCaptured: (Long, Uri, String, Long) -> Unit,
-    onEvidenciaDelete: (Long) -> Unit = {}
+    onEvidenciaDelete: (Long, String) -> Unit = { _, _ -> }
 ) {
     val actividad = actividades.find { it.id == actividadId }
+    val userRole = usuario.role
     val context = LocalContext.current
 
     var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
@@ -166,18 +184,44 @@ fun PantallaDetalleActividad(
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.ExtraBold
                         )
-                        Text(text = "Estado: ${actividad.estado}", color = MaterialTheme.colorScheme.primary)
+                        val mensajeProgreso = when {
+                            actividad.estado == ActividadEstado.ESPERA -> "Tarea Pausada"
+                            actividad.progreso == 100 -> "Tarea Completada"
+                            else -> "En curso (${actividad.progreso}%)"
+                        }
+                        Text(
+                            text = "Estado: ${actividad.estado} - $mensajeProgreso",
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        
+                        LinearProgressIndicator(
+                            progress = { actividad.progreso / 100f },
+                            modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                            color = if (actividad.estado == ActividadEstado.MAL) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
 
+                // Filtrar evidencias para el aprendiz (incluyendo legado con userId null)
+                val evidenciasAMostrar = if (userRole == Role.STUDENT) {
+                    actividad.evidencias.filter { it.userId == usuario.id || it.userId == null }
+                } else {
+                    // Para el instructor, mostrar todas
+                    actividad.evidencias
+                }
+
                 EvidenciaSection(
-                    evidencia = actividad.evidencia,
+                    evidencias = evidenciasAMostrar,
                     onEvidenciaCaptured = { _ ->
                         solicitarCamara()
                     },
                     onRemove = { solicitarCamara() },
-                    onDelete = { onEvidenciaDelete(actividad.id) },
-                    canEdit = userRole == Role.STUDENT
+                    onDelete = { ownerId ->
+                        onEvidenciaDelete(actividad.id, ownerId)
+                    },
+                    canEdit = userRole == Role.STUDENT,
+                    isInstructor = userRole == Role.INSTRUCTOR
                 )
 
                 if (userRole == Role.INSTRUCTOR) {
@@ -188,7 +232,12 @@ fun PantallaDetalleActividad(
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text("Cambiar Estado", fontWeight = FontWeight.Bold)
                             Spacer(modifier = Modifier.height(8.dp))
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            
+                            FlowRow(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                maxItemsInEachRow = 3
+                            ) {
                                 ActividadEstado.entries.forEach { estado ->
                                     FilterChip(
                                         selected = actividad.estado == estado,
@@ -197,6 +246,15 @@ fun PantallaDetalleActividad(
                                     )
                                 }
                             }
+                            
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text("Ajustar Progreso Manual", fontWeight = FontWeight.Bold)
+                            Slider(
+                                value = actividad.progreso.toFloat(),
+                                onValueChange = { onProgresoUpdate(actividad.id, it.toInt()) },
+                                valueRange = 0f..100f,
+                                steps = 10
+                            )
                         }
                     }
                 }

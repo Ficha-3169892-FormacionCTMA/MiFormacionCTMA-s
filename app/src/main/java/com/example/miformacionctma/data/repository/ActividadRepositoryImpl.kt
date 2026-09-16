@@ -63,6 +63,20 @@ class ActividadRepositoryImpl {
             }
     }
 
+    suspend fun deleteEvidenciaPorUsuario(actividadId: Long, userId: String?) = withContext(Dispatchers.IO) {
+        client.postgrest["evidencias"]
+            .delete {
+                filter {
+                    eq("actividad_id", actividadId)
+                    if (userId != null) {
+                        eq("user_id", userId)
+                    } else {
+                        exact("user_id", null)
+                    }
+                }
+            }
+    }
+
     // Subir foto al bucket 'evidencias' en Supabase Storage
     suspend fun uploadImagenEvidencia(
         bucketName: String = "evidencias",
