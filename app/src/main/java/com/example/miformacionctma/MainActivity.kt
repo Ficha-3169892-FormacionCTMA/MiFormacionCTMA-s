@@ -197,8 +197,8 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                         username = usuarioActual.username
                     )
                 },
-                onEvidenciaDelete = { id, ownerId ->
-                    actividadViewModel.eliminarEvidencia(id, ownerId)
+                onEvidenciaDelete = { idActividad, idEvidencia ->
+                    actividadViewModel.eliminarEvidencia(idActividad, idEvidencia)
                 }
             )
         }

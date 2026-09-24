@@ -31,6 +31,7 @@ fun ActividadDto.toDomain(): ActividadFormativa {
 fun ActividadDtoWithEvidencias.toDomain(): ActividadFormativa {
     val evidenciasDomain = evidencias.map {
         Evidencia(
+            id = it.id,
             uri = it.fileUrl,
             mimeType = it.mimeType,
             size = it.sizeBytes,

@@ -83,7 +83,7 @@ fun PantallaDetalleActividad(
     onStatusUpdate: (Long, ActividadEstado) -> Unit,
     onProgresoUpdate: (Long, Int) -> Unit,
     onEvidenciaCaptured: (Long, Uri, String, Long) -> Unit,
-    onEvidenciaDelete: (Long, String) -> Unit = { _, _ -> }
+    onEvidenciaDelete: (Long, Long) -> Unit = { _, _ -> }
 ) {
     val actividad = actividades.find { it.id == actividadId }
     val userRole = usuario.role
@@ -217,8 +217,8 @@ fun PantallaDetalleActividad(
                         solicitarCamara()
                     },
                     onRemove = { solicitarCamara() },
-                    onDelete = { ownerId ->
-                        onEvidenciaDelete(actividad.id, ownerId)
+                    onDelete = { evidenciaId ->
+                        onEvidenciaDelete(actividad.id, evidenciaId)
                     },
                     canEdit = userRole == Role.STUDENT,
                     isInstructor = userRole == Role.INSTRUCTOR

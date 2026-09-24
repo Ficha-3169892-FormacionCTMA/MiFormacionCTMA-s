@@ -12,6 +12,7 @@ enum class EvidenciaStatus {
 
 @Serializable
 data class Evidencia(
+    val id: Long? = null,
     val uri: String,
     val mimeType: String,
     val size: Long,

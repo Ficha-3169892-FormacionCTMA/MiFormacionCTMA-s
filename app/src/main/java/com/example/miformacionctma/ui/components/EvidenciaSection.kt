@@ -28,7 +28,7 @@ fun EvidenciaSection(
     evidencias: List<Evidencia>,
     onEvidenciaCaptured: (Uri) -> Unit,
     onRemove: () -> Unit,
-    onDelete: (String) -> Unit = {},
+    onDelete: (Long) -> Unit = {},
     canEdit: Boolean = true,
     isInstructor: Boolean = false
 ) {
@@ -83,7 +83,7 @@ fun EvidenciaSection(
                             isInstructor = isInstructor,
                             onFullScreen = { showFullScreenUri = it },
                             onRemove = onRemove,
-                            onDelete = { onDelete(evidencia.userId ?: "") }
+                            onDelete = { onDelete(evidencia.id ?: 0L) }
                         )
                     }
                 }

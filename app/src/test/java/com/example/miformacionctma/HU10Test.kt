@@ -48,8 +48,8 @@ class HU10Test {
     @Test
     fun `HU 10 CP-07 - Soporte Multimedia - Múltiples evidencias`() {
         val evidencias = listOf(
-            Evidencia("uri1", "image/jpeg", 1024, EvidenciaStatus.SINCRONIZADA, 1, "u1"),
-            Evidencia("uri2", "image/png", 2048, EvidenciaStatus.SINCRONIZADA, 1, "u2")
+            Evidencia(id = 101L, uri = "uri1", mimeType = "image/jpeg", size = 1024, status = EvidenciaStatus.SINCRONIZADA, actividadId = 1, userId = "u1"),
+            Evidencia(id = 102L, uri = "uri2", mimeType = "image/png", size = 2048, status = EvidenciaStatus.SINCRONIZADA, actividadId = 1, userId = "u2")
         )
         assertEquals(2, evidencias.size)
     }
@@ -57,14 +57,15 @@ class HU10Test {
     @Test
     fun `HU 10 CP-08 - Eliminación de evidencia específica`() {
         val evidencias = mutableListOf(
-            Evidencia("uri1", "image/jpeg", 1024, EvidenciaStatus.SINCRONIZADA, 1, "u1"),
-            Evidencia("uri2", "image/png", 2048, EvidenciaStatus.SINCRONIZADA, 1, "u2")
+            Evidencia(id = 101L, uri = "uri1", mimeType = "image/jpeg", size = 1024, status = EvidenciaStatus.SINCRONIZADA, actividadId = 1, userId = "u1"),
+            Evidencia(id = 102L, uri = "uri2", mimeType = "image/png", size = 2048, status = EvidenciaStatus.SINCRONIZADA, actividadId = 1, userId = "u1")
         )
-        // Simular borrado de u1
-        evidencias.removeIf { it.userId == "u1" }
+        // Ahora borramos por ID único, no por userId (que era el error que arreglamos)
+        val idABorrar = 101L
+        evidencias.removeIf { it.id == idABorrar }
         
         assertEquals(1, evidencias.size)
-        assertEquals("u2", evidencias[0].userId)
+        assertEquals(102L, evidencias[0].id)
     }
 
     @Test
