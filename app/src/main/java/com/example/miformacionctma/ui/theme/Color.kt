@@ -15,3 +15,8 @@ val OnSecondaryContainer = Color(0xFF004D40)
 val Background = Color(0xFFF8F9FA)
 val Surface = Color(0xFFFFFFFF)
 val Error = Color(0xFFEF5350)
+
+// Colores semánticos para estados de actividad
+val EstadoCompletada = Color(0xFF2E7D32)
+val EstadoEnProgreso = Color(0xFF0288D1)
+val EstadoPendiente = Color(0xFFED6C02)

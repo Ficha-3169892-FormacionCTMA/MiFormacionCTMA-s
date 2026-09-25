@@ -19,18 +19,27 @@ import androidx.compose.ui.unit.dp
 import com.example.miformacionctma.domain.ActividadFormativa
 import com.example.miformacionctma.domain.Prioridad
 import com.example.miformacionctma.domain.estadoActividad
+import com.example.miformacionctma.ui.theme.EstadoCompletada
+import com.example.miformacionctma.ui.theme.EstadoEnProgreso
+import com.example.miformacionctma.ui.theme.EstadoPendiente
 
 @Composable
 fun TarjetaActividad(
     actividad: ActividadFormativa,
     onClick: () -> Unit,
-    onDeleteClick: (() -> Unit)? = null // <-- CAMBIO AQUÍ: Ahora acepta null y su valor por defecto es null
+    onDeleteClick: (() -> Unit)? = null
 ) {
     val estado = estadoActividad(actividad)
     val colorPrioridad = when (actividad.prioridad) {
         Prioridad.ALTA -> MaterialTheme.colorScheme.error
         Prioridad.MEDIA -> Color(0xFFFFA726)
         Prioridad.BAJA -> Color(0xFF66BB6A)
+    }
+
+    val colorEstado = when {
+        estado.contains("Completada", ignoreCase = true) -> EstadoCompletada
+        estado.contains("progreso", ignoreCase = true) -> EstadoEnProgreso
+        else -> EstadoPendiente
     }
 
     ElevatedCard(
@@ -41,7 +50,7 @@ fun TarjetaActividad(
                 stateDescription = "Estado: $estado"
             }
             .clickable { onClick() },
-        shape = RoundedCornerShape(28.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
@@ -67,7 +76,7 @@ fun TarjetaActividad(
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Surface(
-                        color = colorPrioridad.copy(alpha = 0.1f),
+                        color = colorPrioridad.copy(alpha = 0.12f),
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(
@@ -79,14 +88,13 @@ fun TarjetaActividad(
                         )
                     }
 
-                    // CAMBIO AQUÍ: Solo muestra el botón si onDeleteClick NO es nulo
                     if (onDeleteClick != null) {
                         Spacer(modifier = Modifier.width(8.dp))
                         IconButton(onClick = onDeleteClick) {
                             Icon(
                                 imageVector = Icons.Default.Delete,
                                 contentDescription = "Eliminar",
-                                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f),
+                                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -103,7 +111,7 @@ fun TarjetaActividad(
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Surface(
                     color = MaterialTheme.colorScheme.secondaryContainer,
@@ -118,12 +126,19 @@ fun TarjetaActividad(
                         Text(text = "${actividad.diasRestantes}d", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary)
                     }
                 }
-                Text(
-                    text = estado,
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.secondary
-                )
+
+                Surface(
+                    color = colorEstado.copy(alpha = 0.12f),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = estado,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = colorEstado
+                    )
+                }
             }
 
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -141,14 +156,14 @@ fun TarjetaActividad(
                         text = "${actividad.progreso}%",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        color = colorEstado
                     )
                 }
                 LinearProgressIndicator(
                     progress = { actividad.progreso / 100f },
                     modifier = Modifier.fillMaxWidth().height(8.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                    color = colorEstado,
+                    trackColor = colorEstado.copy(alpha = 0.15f),
                     strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
                 )
             }

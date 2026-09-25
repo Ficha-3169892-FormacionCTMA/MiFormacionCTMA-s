@@ -1,16 +1,18 @@
 package com.example.miformacionctma.ui.screens
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Assignment
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.miformacionctma.domain.ActividadFormativa
+import com.example.miformacionctma.domain.estadoActividad
 import com.example.miformacionctma.domain.model.Role
 import com.example.miformacionctma.domain.model.User
 import com.example.miformacionctma.ui.components.ResumenActividades
@@ -56,7 +59,53 @@ fun PantallaActividades(
     }
 
     var searchBarVisible by remember { mutableStateOf(false) }
+    var filtroEstado by remember { mutableStateOf("Todas") }
+    var actividadAEliminarId by remember { mutableStateOf<Long?>(null) }
     val esInstructor = usuario.role == Role.INSTRUCTOR
+
+    // Diálogo de confirmación para eliminar actividad
+    if (actividadAEliminarId != null) {
+        AlertDialog(
+            onDismissRequest = { actividadAEliminarId = null },
+            icon = {
+                Icon(
+                    Icons.Default.Warning,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error
+                )
+            },
+            title = {
+                Text(
+                    text = "¿Eliminar actividad?",
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text("Esta acción eliminará la actividad y sus evidencias asociadas. No se puede deshacer.")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val id = actividadAEliminarId
+                        actividadAEliminarId = null
+                        if (id != null) {
+                            onDeleteClick(id)
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Eliminar")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { actividadAEliminarId = null }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -78,7 +127,7 @@ fun PantallaActividades(
                         Icon(Icons.Default.Search, contentDescription = "Buscar")
                     }
                     IconButton(onClick = onLogoutClick) {
-                        Icon(Icons.Default.ExitToApp, contentDescription = "Cerrar Sesión")
+                        Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Cerrar Sesión")
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -105,55 +154,108 @@ fun PantallaActividades(
         }
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
-            // Banner de sesión de usuario
+            // Banner de usuario con Avatar e identificación visual de Rol
             Surface(
-                color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f),
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = if (esInstructor) Icons.Default.School else Icons.Default.Person,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.secondary,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Hola, ${usuario.username}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = usuario.username.take(1).uppercase(),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimary
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = usuario.username,
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = usuario.email,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
-                    SuggestionChip(
+                    AssistChip(
                         onClick = { },
                         label = {
                             Text(
                                 text = if (esInstructor) "Instructor" else "Aprendiz",
-                                style = MaterialTheme.typography.labelSmall
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.labelMedium
                             )
                         },
-                        colors = SuggestionChipDefaults.suggestionChipColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer
-                        )
+                        leadingIcon = {
+                            Icon(
+                                imageVector = if (esInstructor) Icons.Default.School else Icons.Default.Person,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        },
+                        shape = RoundedCornerShape(12.dp)
                     )
                 }
             }
 
-            if (searchBarVisible) {
+            // Barra de Búsqueda Desplegable con Animación
+            AnimatedVisibility(
+                visible = searchBarVisible,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = onSearchQueryChange,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
                     placeholder = { Text("Filtrar por título...") },
                     leadingIcon = { Icon(Icons.Default.Search, null) },
+                    trailingIcon = {
+                        if (searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { onSearchQueryChange("") }) {
+                                Icon(Icons.Default.Close, contentDescription = "Limpiar")
+                            }
+                        }
+                    },
                     shape = RoundedCornerShape(16.dp),
                     singleLine = true
                 )
+            }
+
+            // Chips de Filtro Rápido por Estado
+            val opcionesFiltro = listOf("Todas", "Pendiente", "En progreso", "Completada")
+            LazyRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(opcionesFiltro) { opcion ->
+                    FilterChip(
+                        selected = (filtroEstado == opcion),
+                        onClick = { filtroEstado = opcion },
+                        label = { Text(opcion, fontWeight = FontWeight.SemiBold) },
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                }
             }
 
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
@@ -171,16 +273,31 @@ fun PantallaActividades(
                     }
                     is ListadoUiState.Error -> {
                         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text(uiState.mensaje, color = Color.Red)
+                            Text(uiState.mensaje, color = MaterialTheme.colorScheme.error)
                         }
                     }
                     is ListadoUiState.Contenido -> {
-                        ContenidoActividades(
-                            actividades = uiState.actividades,
-                            esInstructor = esInstructor,
-                            onActividadClick = onActividadClick,
-                            onDeleteClick = onDeleteClick
-                        )
+                        val actividadesFiltradas = if (filtroEstado == "Todas") {
+                            uiState.actividades
+                        } else {
+                            uiState.actividades.filter { actividad ->
+                                estadoActividad(actividad).equals(filtroEstado, ignoreCase = true)
+                            }
+                        }
+
+                        if (actividadesFiltradas.isEmpty()) {
+                            EstadoVacioFiltro(
+                                filtro = filtroEstado,
+                                onLimpiarFiltro = { filtroEstado = "Todas" }
+                            )
+                        } else {
+                            ContenidoActividades(
+                                actividades = actividadesFiltradas,
+                                esInstructor = esInstructor,
+                                onActividadClick = onActividadClick,
+                                onDeleteClick = { id -> actividadAEliminarId = id }
+                            )
+                        }
                     }
                 }
             }
@@ -196,7 +313,7 @@ private fun ContenidoActividades(
     onDeleteClick: (Long) -> Unit
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-        val esPantallaAncha = maxWidth >= 600.dp
+        val esPantallaAncha = this.maxWidth >= 600.dp
 
         if (!esPantallaAncha) {
             LazyColumn(
@@ -253,15 +370,15 @@ private fun EstadoVacio(
         verticalArrangement = Arrangement.Center
     ) {
         Surface(
-            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-            shape = RoundedCornerShape(32.dp),
-            modifier = Modifier.size(120.dp)
+            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
+            shape = CircleShape,
+            modifier = Modifier.size(100.dp)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
-                    Icons.Default.Info,
+                    Icons.Default.TaskAlt,
                     contentDescription = null,
-                    modifier = Modifier.size(48.dp),
+                    modifier = Modifier.size(52.dp),
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
@@ -270,13 +387,14 @@ private fun EstadoVacio(
         Spacer(modifier = Modifier.height(20.dp))
 
         Text(
-            text = "No hay actividades registradas",
-            style = MaterialTheme.typography.headlineSmall,
+            text = "Sin actividades asignadas",
+            style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center
         )
+        Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = if (esInstructor) "Empieza a registrar las tareas para tus estudiantes."
+            text = if (esInstructor) "Empieza creando la primera actividad para tu grupo."
             else "Aún no tienes tareas asignadas por tu instructor.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -284,17 +402,47 @@ private fun EstadoVacio(
         )
 
         if (esInstructor) {
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             Button(
                 onClick = onAddClick,
-                modifier = Modifier.height(56.dp).padding(horizontal = 24.dp),
+                modifier = Modifier.height(50.dp),
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Icon(Icons.Default.Add, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Registrar Primera Actividad", fontWeight = FontWeight.Bold)
             }
+        }
+    }
+}
+
+@Composable
+private fun EstadoVacioFiltro(
+    filtro: String,
+    onLimpiarFiltro: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            Icons.Default.FilterListOff,
+            contentDescription = null,
+            modifier = Modifier.size(56.dp),
+            tint = MaterialTheme.colorScheme.outline
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "No hay actividades con estado \"$filtro\"",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        TextButton(onClick = onLimpiarFiltro) {
+            Text("Mostrar todas las actividades")
         }
     }
 }
